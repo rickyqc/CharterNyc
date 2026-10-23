@@ -72,7 +72,7 @@ input{font:inherit;color:inherit}
 /* Hero */
 .hero{text-align:center;padding:90px 0 0}
 .hero h1{font-family:var(--font-display);letter-spacing:-.035em;max-width:900px;margin:0 auto 22px;font-size:76px;font-weight:500;line-height:1}
-.hero .sub{color:var(--ink-dim);max-width:640px;margin:0 auto 56px;font-size:19px}
+.hero .sub{color:var(--accent);max-width:640px;margin:0 auto 56px;font-size:13.5px;font-weight:500}
 .lenses{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left}
 .lens-card{height:100%;border:2px solid transparent;border-radius:calc(var(--r-card) + 2px);transition:border-color .15s,transform .35s var(--ease);display:block;width:100%;text-align:left}
 .lens-card:hover{transform:translateY(-4px)}
@@ -89,7 +89,7 @@ input{font:inherit;color:inherit}
 .hero-ctas{display:flex;justify-content:center;gap:14px;margin:48px 0 0;flex-wrap:wrap}
 .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left;max-width:var(--wrap);margin:0 auto;padding:72px var(--gutter) 80px}
 @media (max-width:900px){
-  .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{font-size:17px;margin-bottom:36px}
+  .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{margin-bottom:36px}
   .lenses{grid-template-columns:1fr 1fr;gap:12px}.lens-art{font-size:44px}.lens-info{padding:14px 14px 16px}
   .lens-art .tag{top:10px;left:10px}.strip{gap:10px 28px}
 }
@@ -197,6 +197,7 @@ input{font:inherit;color:inherit}
 .fact>span:first-child{color:var(--ink-dim);display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
 .fact>span:last-child{text-align:right;font-weight:500;max-width:62%}
 .fact .na{color:var(--ink-dim);font-weight:400}
+.data-note{background:color-mix(in srgb,var(--accent) 8%,var(--bg));border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));border-radius:12px;padding:12px 14px;font-size:13.5px;margin:0 0 20px}
 .sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px}
 .lens-box{margin-top:28px}
 .lens-box h4{font-size:13.5px;color:var(--accent);font-weight:500;margin-bottom:10px}
@@ -244,8 +245,8 @@ input{font:inherit;color:inherit}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
 .step-n{color:var(--ink-dim);margin-bottom:16px;font-size:14px}
 .step-t{margin-bottom:8px;font-size:16.5px;font-weight:650}
-.step-link{text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line);transition:color .2s,text-decoration-color .2s}
-.step-link:hover{color:var(--accent);text-decoration-color:currentColor}
+.step-link{color:var(--accent);transition:opacity .2s}
+.step-link:hover{opacity:.8}
 .step-b{color:var(--ink-dim);font-size:14px;max-width:320px}
 @media (max-width:900px){.steps{grid-template-columns:1fr;gap:28px}}
 
@@ -311,7 +312,6 @@ input{font:inherit;color:inherit}
 <main id="top">
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow reveal">Every NYC charter school</p>
       <h1 class="reveal">Who's exploring today?</h1>
       <p class="sub reveal">Pick a lens.<br>We'll sort NYC's charter schools around what matters to you.</p>
       <div class="lenses" id="lenses" role="group" aria-label="Choose a lens"></div>
@@ -998,7 +998,7 @@ function openSheet(id, animate, keepScroll) {
   const L = LENSES[state.lens];
   const saved = state.saved.has(id);
   const r = ratio(s);
-  const na = '<span class="na">Not reported yet</span>';
+  const na = s.dataNote ? '<span class="na">Hidden, see note</span>' : '<span class="na">Not reported yet</span>';
   const status = s.year >= 2026 ? '<span class="tag tag-accent">Opening 2026</span>'
     : s.year >= 2025 ? '<span class="tag tag-accent">New in 2025</span>'
       : `<span class="tag">Since ${s.year}</span>`;
@@ -1027,6 +1027,7 @@ function openSheet(id, animate, keepScroll) {
       <h3 class="sheet-title" id="sheetTitle">${esc(s.name)}</h3>
       <p class="sheet-sub">${where}</p>
     </div>
+    ${s.dataNote ? `<p class="data-note">${esc(s.dataNote)}</p>` : ""}
     <div class="facts">${facts.map(([k, v]) => `<div class="fact"><span>${k}</span><span>${v}</span></div>`).join("")}</div>
     <div class="sheet-actions">
       <button class="btn ${saved ? "btn-ghost" : "btn-primary"}" id="sheetSave">${saved ? "♥ Saved" : "♡ Save"}</button>
@@ -1164,6 +1165,7 @@ function renderStatic() {
     ["Networks", INFO.network],
     ["Boundaries", `Borough and community school district outlines come from <a href="${META.sources.boundaries.url}" target="_blank" rel="noopener">${META.sources.boundaries.label}</a>, lightly simplified.`],
     ["Not here (yet)", "Test scores, lottery odds, waitlists, salaries and graduation rates. Each profile links to the NYSED data site, which has test scores and graduation rates. Compare schools that serve similar students, because populations vary a lot."],
+    ["Data checks", `${META.flagged} schools have federal figures that don't add up: one listed as closed, and campuses reporting a single grade with a handful of students. They stay on the map, but their grades and enrollment are hidden and left out of every total. Students-per-teacher figures outside 4–30 are hidden too.`],
     ["Quirks", "The state lists each school under the district it's chartered in. About 20 schools are physically in a neighboring district, and two sit just across a borough line."],
   ].map(([k, v]) => `<div class="detail-row"><span>${k}</span><span>${v}</span></div>`).join("");
   $("#builtNote").textContent = `Data built ${META.built}. Not affiliated with NYSED or NYC DOE.`;

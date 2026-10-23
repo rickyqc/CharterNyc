@@ -37,6 +37,14 @@ CCD_HISTORY = range(2019, 2025)  # 2024 = the 2024-25 school year
 CCD_YEARS = (2022, 2023, 2024)  # where location fields come from; later years win
 SHARE_YEAR = 2024
 MIN_TREND_BASE = 100  # don't measure growth from a tiny founding class
+
+# Quality checks on federal (CCD) figures, same rules as CharterCompassNYC.
+CCD_CLOSED = 2
+RATIO_RANGE = (4, 30)  # students per FTE teacher outside this is a reporting error
+MIN_TEACHERS = 2
+REVIEWED_INCOMPLETE = {
+    "321200860866": "94 students spread across grades 2–11",  # Girls Prep NY; students appear under sibling Public Prep charters
+}
 BOROUGHS = "https://data.cityofnewyork.us/resource/gthc-hcne.geojson?$limit=10"
 DISTRICTS = "https://data.cityofnewyork.us/resource/8ugf-3d8u.geojson?$limit=100"
 
@@ -188,6 +196,28 @@ def district_share(rows):
     return {str(k): out[k] for k in sorted(out)}
 
 
+def looks_like_shell(rec, opened):
+    """An established school reporting one grade and a handful of students,
+    e.g. a campus whose students moved to a sibling charter."""
+    lo, hi, n = rec["lowest_grade_offered"], rec["highest_grade_offered"], rec["enrollment"]
+    return rec["year"] - opened >= 2 and lo is not None and lo == hi and n is not None and 0 <= n < 50
+
+
+def data_note(rec, sed, opened):
+    if rec["school_status"] == CCD_CLOSED:
+        return (f"Federal records list this school as closed in {rec['year']}–{str(rec['year'] + 1)[2:]}, "
+                "so grades and enrollment aren't shown. The state directory still lists it; check with the school.")
+    if looks_like_shell(rec, opened) or sed in REVIEWED_INCOMPLETE:
+        why = REVIEWED_INCOMPLETE.get(sed, "one grade, a handful of students")
+        return (f"Federal figures for this school look incomplete ({why}), likely because students "
+                "are reported under a sibling campus. Check with the school.")
+    return None
+
+
+def plausible_ratio(enroll, teachers):
+    return teachers >= MIN_TEACHERS and RATIO_RANGE[0] <= enroll / teachers <= RATIO_RANGE[1]
+
+
 def grade(g):
     return {-1: "PK", 0: "K"}.get(g, str(g)) if g is not None and g >= -1 else None
 
@@ -238,13 +268,18 @@ def main():
                 "address": f"{title(c['street_location'])}, {title(c['city_location'])}, NY {c['zip_location']}",
                 "grades": [grade(c.get("lowest_grade_offered")), grade(c.get("highest_grade_offered"))],
                 "enroll": enroll if enroll and enroll > 0 else None,
-                "teachers": round(teachers, 1) if teachers and teachers > 0 else None,
+                "teachers": round(teachers, 1) if enroll and enroll > 0 and teachers and plausible_ratio(enroll, teachers) else None,
                 "ccdYear": c["year"],
                 "nces": c["ncessch"],
             })
-            g = growth(history.get(sed, {}))
-            if g:
-                s["growth"] = g
+            note = data_note(c, sed, int(year))
+            if note:
+                # Keep the school and its pin, but don't show or count figures we don't trust.
+                s.update({"grades": [None, None], "enroll": None, "teachers": None, "dataNote": note})
+            else:
+                g = growth(history.get(sed, {}))
+                if g:
+                    s["growth"] = g
         else:
             p = point_in(csd_shapes[csd], sed)
             s.update({"lat": round(p.y, 6), "lon": round(p.x, 6), "loc": "approx"})
@@ -261,6 +296,7 @@ def main():
         "built": date.today().isoformat(),
         "count": len(schools),
         "exact": sum(s["loc"] == "exact" for s in schools),
+        "flagged": sum("dataNote" in s for s in schools),
         "districts": districts_share,
         "shareYear": SHARE_YEAR,
         "sources": {
