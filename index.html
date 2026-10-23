@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Charter Compass NYC</title>
+<meta name="description" content="Explore every NYC charter school on one map, through the lens of a parent, teacher, student or funder.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&family=Inter:wght@400..700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.min.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e0d0c'/%3E%3Cpath d='M16 6l4 10-4 10-4-10z' fill='%23c8440a'/%3E%3C/svg%3E">
+<style>
+/* Tokens lifted from larpinglabs.com (colors, type, radii, spacing); authorizer hues validated for CVD separation. */
+:root{
+  --bg:#fff;--bg-alt:#f5f4f0;--panel:#ecece6;--ink:#0e0d0c;--ink-dim:#6d6a62;--line:#e7e5dd;--accent:#c8440a;
+  --a-S:#c8440a;--a-R:#2f6db5;--a-D:#2f8a57;
+  --font-display:"Instrument Sans",-apple-system,sans-serif;
+  --font-body:"Inter",-apple-system,sans-serif;
+  --r-btn:8px;--r-card:16px;--r-inner:14px;--r-pill:20px;
+  --wrap:1180px;--gutter:32px;--section:100px;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --shadow:0 1px 12px #0000000d;
+  --sheet-shadow:0 24px 64px #0000001f;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#121110;--bg-alt:#1a1917;--panel:#201f1c;--ink:#f4f2ec;--ink-dim:#a5a196;--line:#302e29;--accent:#e2854a;
+  --a-S:#d9773c;--a-R:#5b93d4;--a-D:#4aa873;--sheet-shadow:0 24px 64px #00000080;color-scheme:dark}}
+:root[data-theme=dark]{
+  --bg:#121110;--bg-alt:#1a1917;--panel:#201f1c;--ink:#f4f2ec;--ink-dim:#a5a196;--line:#302e29;--accent:#e2854a;
+  --a-S:#d9773c;--a-R:#5b93d4;--a-D:#4aa873;--sheet-shadow:0 24px 64px #00000080;color-scheme:dark}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);scroll-behavior:smooth;scroll-padding-top:72px}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;line-height:1.6;
+  padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter)}
+.eyebrow{color:var(--accent);margin-bottom:16px;font-size:13.5px;font-weight:500}
+.h2{font-family:var(--font-display);letter-spacing:-.03em;max-width:640px;font-size:40px;font-weight:500;line-height:1.15}
+.lede{color:var(--ink-dim);max-width:460px;font-size:16.5px}
+.btn{border-radius:var(--r-btn);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;font-size:14px;font-weight:500;transition:opacity .2s,background .2s,border-color .2s;white-space:nowrap}
+.btn-primary{background:var(--ink);color:var(--bg)}
+.btn-primary:hover{opacity:.8}
+.btn-ghost{border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--ink-dim)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Nav */
+.nav{position:sticky;top:0;z-index:1000;background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);border-bottom:1px solid var(--line);transition:box-shadow .2s;padding-top:env(safe-area-inset-top)}
+.nav.scrolled{box-shadow:var(--shadow)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:76px;transition:height .2s}
+.nav.scrolled .nav-in{height:56px}
+.wordmark{font-family:var(--font-display);letter-spacing:-.025em;font-size:18px;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.wordmark svg{border-radius:5px;flex-shrink:0}
+.navlinks{display:flex;align-items:center;gap:36px}
+.navlinks a{color:var(--ink-dim);font-size:14px;transition:color .2s}
+.navlinks a:hover{color:var(--ink)}
+.nav-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:var(--r-btn);display:grid;place-items:center;color:var(--ink-dim);transition:color .2s,background .2s}
+.icon-btn:hover{color:var(--ink);background:var(--panel)}
+.nav .btn{transition:opacity .2s,padding .2s}
+.nav.scrolled .btn{padding:9px 18px}
+@media (max-width:900px){.navlinks{display:none}}
+
+/* Hero */
+.hero{text-align:center;padding:90px 0 0}
+.hero h1{font-family:var(--font-display);letter-spacing:-.035em;max-width:900px;margin:0 auto 22px;font-size:76px;font-weight:500;line-height:1}
+.hero .sub{color:var(--ink-dim);max-width:600px;margin:0 auto 56px;font-size:19px}
+.lenses{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left}
+.lens-card{height:100%;border:2px solid transparent;border-radius:calc(var(--r-card) + 2px);transition:border-color .15s,transform .35s var(--ease);display:block;width:100%;text-align:left}
+.lens-card:hover{transform:translateY(-4px)}
+.lens-card[aria-pressed=true]{border-color:var(--accent)}
+.lens-face{height:100%;background:var(--panel);border-radius:var(--r-inner);overflow:hidden}
+.lens-art{aspect-ratio:4/3;display:grid;place-items:center;font-size:64px;background:color-mix(in srgb,var(--panel) 70%,var(--ink) 6%);position:relative}
+.lens-art .tag{position:absolute;top:14px;left:14px}
+.lens-info{padding:18px 20px 22px}
+.lens-name{font-size:16px;font-weight:650;margin-bottom:4px}
+.lens-meta{color:var(--ink-dim);font-size:13.5px;line-height:1.45}
+.lens-status{color:var(--accent);font-size:12.5px;font-weight:500;margin-top:10px}
+.tag{color:var(--bg);background:var(--ink);border-radius:var(--r-pill);padding:4px 10px;font-size:12px;white-space:nowrap;line-height:1.4;display:inline-block}
+.tag-ghost{color:var(--ink-dim);background:var(--bg);border:1px solid var(--line)}
+.hero-ctas{display:flex;justify-content:center;gap:14px;margin:48px 0 0;flex-wrap:wrap}
+.strip{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 56px;padding:56px var(--gutter) 64px}
+.strip div{color:var(--ink-dim);font-size:15px}
+.strip b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+@media (max-width:900px){
+  .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{font-size:17px;margin-bottom:36px}
+  .lenses{grid-template-columns:1fr 1fr;gap:12px}.lens-art{font-size:44px}.lens-info{padding:14px 14px 16px}
+  .lens-art .tag{top:10px;left:10px}.strip{gap:10px 28px}
+}
+
+/* Explore */
+.explore{background:var(--bg-alt);border-top:1px solid var(--line);padding:var(--section) 0}
+.explore-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:40px}
+.swap{transition:opacity .35s var(--ease),transform .35s var(--ease)}
+.swap.out{opacity:0;transform:translateY(8px)}
+.insights{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:40px}
+.stat{border-top:1px solid var(--line);padding-top:18px}
+.stat-v{font-family:var(--font-display);font-size:40px;font-weight:500;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat-l{color:var(--ink-dim);font-size:14px;display:flex;align-items:center;gap:6px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:22px}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-btn);padding:11px 14px 11px 38px;font-size:14px;transition:border-color .2s}
+.search input:focus{outline:none;border-color:var(--ink-dim)}
+.search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--ink-dim)}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);border-radius:var(--r-pill);padding:6px 13px;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:color .2s,background .2s,border-color .2s}
+.pill:hover{color:var(--ink)}
+.pill[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px var(--bg)}
+.grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
+.mapcard{position:relative;isolation:isolate;border-radius:var(--r-card);overflow:hidden;background:var(--panel);min-height:640px}
+#map{position:absolute;inset:0}
+.map-legend{position:absolute;left:14px;bottom:14px;z-index:500;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--ink-dim);display:grid;gap:4px;box-shadow:var(--shadow);max-width:calc(100% - 28px)}
+.map-legend .row{display:flex;align-items:center;gap:8px}
+.ring{width:9px;height:9px;border-radius:50%;border:1.5px dashed var(--ink-dim)}
+.map-tools{position:absolute;right:14px;top:14px;z-index:500;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.map-tools .pill{box-shadow:var(--shadow)}
+.ramp{display:flex;align-items:center;gap:6px}
+.ramp i{width:14px;height:8px;border-radius:2px;background:var(--accent)}
+.listcard{background:var(--bg);border-radius:var(--r-card);display:flex;flex-direction:column;height:640px;overflow:hidden}
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);font-size:13px;color:var(--ink-dim)}
+.list-head b{color:var(--ink);font-weight:600}
+.list{overflow-y:auto;flex:1;overscroll-behavior:contain}
+.item{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer;transition:background .15s}
+.item:hover,.item.hot{background:var(--bg-alt)}
+.item .dot{margin-top:7px}
+.item .dot.approx{background:transparent!important;border:1.5px dashed var(--ink-dim);box-shadow:none}
+.item-main{flex:1;min-width:0}
+.item-name{font-size:14.5px;font-weight:600;line-height:1.35}
+.item-meta{color:var(--ink-dim);font-size:12.5px;margin-top:2px}
+.heart{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--ink-dim);flex-shrink:0;transition:color .2s,transform .2s var(--ease)}
+.heart:hover{color:var(--ink)}
+.heart[aria-pressed=true]{color:var(--accent)}
+.heart[aria-pressed=true] svg{fill:currentColor}
+.heart:active{transform:scale(.85)}
+.more{padding:16px 18px;text-align:center}
+.empty{padding:48px 24px;text-align:center;color:var(--ink-dim);font-size:14px}
+.empty b{display:block;color:var(--ink);font-family:var(--font-display);font-size:20px;font-weight:500;margin-bottom:6px}
+.checklist-wrap{margin-top:56px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:40px}
+.checks{list-style:none;counter-reset:c;border-top:1px solid var(--line)}
+.checks li{counter-increment:c;display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--line);font-size:15px}
+.checks li::before{content:counter(c,decimal-leading-zero);color:var(--ink-dim);font-size:13px;padding-top:2px;font-variant-numeric:tabular-nums}
+.checks a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}.mapcard{min-height:440px}.listcard{height:520px}
+  .insights{grid-template-columns:1fr 1fr 1fr;gap:12px}.stat-v{font-size:28px}.stat-l{font-size:12.5px}
+  .checklist-wrap{grid-template-columns:1fr;gap:20px}
+}
+@media (max-width:560px){.insights{grid-template-columns:1fr}.stat{display:flex;align-items:baseline;gap:12px}.stat-v{min-width:90px}}
+
+/* Leaflet restyle */
+.leaflet-container{font-family:var(--font-body);background:var(--panel)}
+.leaflet-control-zoom{border:0!important;box-shadow:var(--shadow)!important;border-radius:10px!important;overflow:hidden}
+.leaflet-control-zoom a{background:var(--bg)!important;color:var(--ink)!important;border-color:var(--line)!important}
+.leaflet-control-attribution{background:color-mix(in srgb,var(--bg) 80%,transparent)!important;color:var(--ink-dim)!important;font-size:10.5px}
+.leaflet-control-attribution a{color:var(--ink-dim)!important}
+.leaflet-tooltip.tip{background:var(--ink);color:var(--bg);border:0;border-radius:10px;padding:8px 11px;font-size:12.5px;line-height:1.4;box-shadow:var(--shadow);max-width:260px;white-space:normal}
+.leaflet-tooltip.tip::before{display:none}
+.leaflet-tooltip.tip small{opacity:.7;display:block}
+.cluster{background:var(--ink);color:var(--bg);border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:600;box-shadow:0 0 0 4px color-mix(in srgb,var(--ink) 18%,transparent);transition:transform .2s var(--ease)}
+.cluster:hover{transform:scale(1.08)}
+.me-pin{width:16px;height:16px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px color-mix(in srgb,var(--ink) 25%,transparent),0 0 0 2px var(--bg) inset}
+.leaflet-fade-anim .leaflet-popup,.leaflet-zoom-anim .leaflet-zoom-animated{transition-timing-function:var(--ease)}
+
+/* Info tips */
+.info{position:relative;display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--line);color:var(--ink-dim);font-size:10px;font-weight:600;font-style:normal;cursor:help;flex-shrink:0}
+.bubble{position:fixed;top:0;left:0;width:max-content;max-width:min(260px,calc(100vw - 32px));background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:10px 12px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:1400;box-shadow:var(--shadow)}
+.bubble.on{opacity:1}
+
+/* Sheet (school profile) */
+.scrim{position:fixed;inset:0;background:#0006;opacity:0;pointer-events:none;transition:opacity .3s;z-index:1100}
+.sheet{position:fixed;top:12px;right:12px;bottom:12px;width:min(460px,calc(100vw - 24px));background:var(--bg);border-radius:22px;box-shadow:var(--sheet-shadow);z-index:1200;transform:translateX(calc(100% + 24px));transition:transform .45s var(--ease);display:flex;flex-direction:column;overflow:hidden;
+  padding-bottom:env(safe-area-inset-bottom)}
+.sheet.open{transform:none}
+.sheet-top{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0}
+.sheet-body{overflow-y:auto;padding:16px 28px 28px;flex:1}
+.sheet h3{font-family:var(--font-display);font-size:30px;font-weight:500;letter-spacing:-.025em;line-height:1.12;margin:14px 0 6px}
+.sheet .where{color:var(--ink-dim);font-size:14px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:var(--r-inner);overflow:hidden;margin:24px 0}
+.fact{background:var(--panel);padding:14px 16px}
+.fact-l{color:var(--ink-dim);font-size:12.5px;display:flex;align-items:center;gap:6px}
+.fact-v{font-size:17px;font-weight:600;margin-top:2px;line-height:1.3;overflow-wrap:anywhere}
+.fact-v small{font-weight:400;color:var(--ink-dim);font-size:12.5px}
+.locbox{display:flex;gap:12px;align-items:flex-start;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
+.locbox .tag{flex-shrink:0;margin-top:1px}
+.sheet h4{font-size:13.5px;color:var(--accent);font-weight:500;margin:28px 0 4px}
+.sheet .checks li{font-size:14px;padding:12px 0}
+.links{display:grid;gap:8px;margin-top:24px}
+.links .btn{justify-content:space-between}
+@media (max-width:700px){
+  .scrim.on{opacity:1;pointer-events:auto}
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;max-height:88vh;border-radius:22px 22px 0 0;transform:translateY(100%)}
+  .sheet-body{padding:12px 20px 24px}
+}
+
+/* Landscape chart */
+.section{border-top:1px solid var(--line);padding:var(--section) 0}
+.section-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:56px}
+.chart{position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.chart .bar{fill:var(--accent);transition:opacity .2s}
+.chart .bar.pipe{fill:color-mix(in srgb,var(--accent) 45%,var(--bg-alt))}
+.chart .hit{fill:transparent}
+.chart .grid line{stroke:var(--line);stroke-width:1}
+.chart text{fill:var(--ink-dim);font-size:11px;font-family:var(--font-body)}
+.chart text.lbl{fill:var(--ink);font-weight:600}
+.chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:8px 11px;border-radius:10px;transform:translate(-50%,calc(-100% - 10px));opacity:0;transition:opacity .15s;white-space:nowrap}
+.chart-note{color:var(--ink-dim);font-size:13px;margin-top:18px;max-width:640px}
+.boros{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;margin-top:64px}
+.boro{border-top:1px solid var(--line);padding-top:16px}
+.boro-n{font-family:var(--font-display);font-size:32px;font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.boro-l{color:var(--ink-dim);font-size:14px}
+.boro-bar{height:4px;border-radius:4px;background:var(--panel);margin-top:12px;overflow:hidden}
+.boro-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transform-origin:left;transition:transform 1s var(--ease)}
+details.table{margin-top:40px;font-size:13.5px}
+details.table summary{cursor:pointer;color:var(--ink-dim);list-style:none;display:inline-flex;gap:6px}
+details.table summary::-webkit-details-marker{display:none}
+details.table table{border-collapse:collapse;width:100%;max-width:520px;margin-top:16px}
+details.table th,details.table td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+details.table th{color:var(--ink-dim);font-weight:500}
+details.table td:last-child,details.table th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.boros{grid-template-columns:repeat(3,1fr);gap:16px}.boro-n{font-size:26px}}
+@media (max-width:560px){.boros{grid-template-columns:1fr 1fr}}
+
+/* How it works */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.step-n{color:var(--ink-dim);margin-bottom:16px;font-size:14px}
+.step-t{margin-bottom:8px;font-size:16.5px;font-weight:650}
+.step-b{color:var(--ink-dim);font-size:14px;max-width:320px}
+@media (max-width:900px){.steps{grid-template-columns:1fr;gap:28px}}
+
+/* Data notes */
+.detail-list{border-top:1px solid var(--line)}
+.detail-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;padding:18px 0;border-bottom:1px solid var(--line);font-size:15px}
+.detail-row span:first-child{color:var(--ink-dim)}
+.detail-row a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
+@media (max-width:700px){.detail-row{grid-template-columns:1fr;gap:4px}}
+
+/* Footer */
+.footer{border-top:1px solid var(--line);padding:64px 0 calc(36px + env(safe-area-inset-bottom))}
+.fgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+.fnote{color:var(--ink-dim);max-width:260px;margin-top:12px;font-size:13.5px}
+.fcol-t{color:var(--ink-dim);margin-bottom:14px;font-size:12.5px}
+.fcol a{display:block;margin-bottom:10px;font-size:14px}
+.fcol a:hover{color:var(--accent)}
+.fbottom{border-top:1px solid var(--line);color:var(--ink-dim);display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding-top:24px;font-size:12.5px}
+@media (max-width:900px){.fgrid{grid-template-columns:1fr 1fr}}
+
+/* Toast */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:var(--r-pill);font-size:13.5px;opacity:0;pointer-events:none;transition:opacity .25s,transform .35s var(--ease);z-index:1300;max-width:calc(100vw - 32px);text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* Scroll reveals */
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+.lenses .reveal:nth-child(2){transition-delay:.06s}.lenses .reveal:nth-child(3){transition-delay:.12s}.lenses .reveal:nth-child(4){transition-delay:.18s}
+
+@media (max-width:560px){:root{--gutter:16px;--section:72px}.h2{font-size:32px}.wordmark{font-size:16px}.nav .btn,.nav.scrolled .btn{padding:9px 14px;font-size:13px}.nav-in{height:60px}.icon-btn{width:34px}}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms!important;animation-duration:.01ms!important;transition-delay:0s!important}
+  .reveal{opacity:1;transform:none}
+  .lens-card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap nav-in">
+    <a href="#top" class="wordmark" aria-label="Charter Compass NYC, back to top">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--ink)"/><path d="M16 6l4 10-4 10-4-10z" fill="var(--accent)"/><circle cx="16" cy="16" r="1.6" fill="var(--bg)"/></svg>
+      Charter Compass
+    </a>
+    <nav class="navlinks" aria-label="Sections">
+      <a href="#explore">Map</a>
+      <a href="#landscape">Landscape</a>
+      <a href="#how">How it works</a>
+      <a href="#data">About the data</a>
+    </nav>
+    <div class="nav-right">
+      <button class="icon-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <a href="#top" class="btn btn-primary" id="lensBtn">Pick a lens</a>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow reveal">Every NYC charter school · 2025–26</p>
+      <h1 class="reveal">Who's exploring today?</h1>
+      <p class="sub reveal">Pick a lens. We'll sort <span data-count>all</span> schools around what matters to you.</p>
+      <div class="lenses" id="lenses" role="group" aria-label="Choose a lens"></div>
+      <div class="hero-ctas reveal">
+        <a href="#explore" class="btn btn-primary">Explore the map</a>
+        <a href="#how" class="btn btn-ghost">How it works</a>
+      </div>
+    </div>
+    <div class="strip reveal" id="strip" aria-label="At a glance"></div>
+  </section>
+
+  <section class="explore" id="explore" aria-labelledby="exploreTitle">
+    <div class="wrap">
+      <div class="explore-head swap" id="exploreHead">
+        <div>
+          <p class="eyebrow" id="lensEyebrow">The map</p>
+          <h2 class="h2" id="exploreTitle">Every charter school in the city.</h2>
+        </div>
+        <p class="lede" id="lensSub">Tap a dot to open its profile. Pick a lens up top and the list re-sorts itself.</p>
+      </div>
+
+      <div class="insights swap" id="insights"></div>
+
+      <div class="controls">
+        <label class="search">
+          <span class="sr">Search schools or networks</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search a school, network or ZIP" autocomplete="off">
+        </label>
+        <div class="pills" id="boroPills" role="group" aria-label="Borough"></div>
+      </div>
+      <div class="controls">
+        <div class="pills" id="authPills" role="group" aria-label="Authorizer"></div>
+        <div class="pills" role="group" aria-label="Tools">
+          <button class="pill" id="mineBtn" aria-pressed="false">♥ My list <span id="mineCount"></span></button>
+          <button class="pill" id="nearBtn" aria-pressed="false">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>
+            Near me
+          </button>
+          <button class="pill" id="surpriseBtn">✦ Surprise me</button>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="mapcard">
+          <div id="map" role="region" aria-label="Map of NYC charter schools"></div>
+          <div class="map-tools">
+            <button class="pill" id="heatBtn" aria-pressed="false">Shade districts</button>
+          </div>
+          <div class="map-legend" id="legend"></div>
+        </div>
+        <div class="listcard">
+          <div class="list-head"><span id="listCount"></span><span id="listSort"></span></div>
+          <div class="list" id="list" role="list"></div>
+        </div>
+      </div>
+
+      <div class="checklist-wrap swap" id="checkWrap" hidden>
+        <div>
+          <p class="eyebrow">What to check next</p>
+          <h3 class="h2" style="font-size:32px" id="checkTitle"></h3>
+        </div>
+        <ol class="checks" id="checks"></ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="landscape" aria-labelledby="landTitle">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <div>
+          <p class="eyebrow">The landscape</p>
+          <h2 class="h2" id="landTitle">Twenty-seven years of openings.</h2>
+        </div>
+        <p class="lede">When today's schools first opened their doors. The lighter bars are the newest wave, still building up grades.</p>
+      </div>
+      <div class="chart reveal" id="chart"><div class="chart-tip" id="chartTip"></div></div>
+      <p class="chart-note">Counts only schools in the current directory. Schools that closed or merged aren't listed, so the early years look smaller than they really were.</p>
+      <details class="table"><summary>View as table ›</summary><table id="chartTable"><thead><tr><th>Year opened</th><th>Schools</th></tr></thead><tbody></tbody></table></details>
+      <div class="boros reveal" id="boros"></div>
+    </div>
+  </section>
+
+  <section class="section" id="how" aria-labelledby="howTitle">
+    <div class="wrap">
+      <p class="eyebrow reveal">How it works</p>
+      <h2 class="h2 reveal" id="howTitle" style="margin-bottom:56px">Three steps. No spreadsheets.</h2>
+      <div class="steps">
+        <div class="reveal"><div class="step-n">01</div><div class="step-t">Pick your lens</div><p class="step-b">Parent, teacher, student or funder. Each lens sorts the schools and picks the facts up front.</p></div>
+        <div class="reveal"><div class="step-n">02</div><div class="step-t">Wander the map</div><p class="step-b">Filter by borough, authorizer or network. Find what's near you. Tap any dot for the short version.</p></div>
+        <div class="reveal"><div class="step-n">03</div><div class="step-t">Heart, share, follow up</div><p class="step-b">Save a shortlist and send the link to whoever you're deciding with. Every profile says what to check next.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="data" aria-labelledby="dataTitle">
+    <div class="wrap">
+      <p class="eyebrow reveal">About the data</p>
+      <h2 class="h2 reveal" id="dataTitle" style="margin-bottom:56px">What's real, what's estimated, what's missing.</h2>
+      <div class="detail-list reveal" id="dataNotes"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <span class="wordmark">
+          <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="var(--ink)"/><path d="M16 6l4 10-4 10-4-10z" fill="var(--accent)"/></svg>
+          Charter Compass
+        </span>
+        <p class="fnote">A friendly way into NYC's charter schools. It's a starting point, not a ranking. Always confirm with the school.</p>
+      </div>
+      <div class="fcol"><div class="fcol-t">Explore</div><a href="#explore">Map</a><a href="#landscape">Landscape</a><a href="#how">How it works</a><a href="#data">About the data</a></div>
+      <div class="fcol"><div class="fcol-t">Sources</div><a href="https://www.nysed.gov/charter-schools/charter-schools-directory" target="_blank" rel="noopener">NYSED directory</a><a href="https://nces.ed.gov/ccd/" target="_blank" rel="noopener">NCES Common Core</a><a href="https://data.cityofnewyork.us/" target="_blank" rel="noopener">NYC Open Data</a></div>
+      <div class="fcol"><div class="fcol-t">Go deeper</div><a href="https://data.nysed.gov/" target="_blank" rel="noopener">NYSED data site</a><a href="https://www.newyorkcharters.org/" target="_blank" rel="noopener">NY Charter Schools Assoc.</a><a href="https://www.suny.edu/charters/" target="_blank" rel="noopener">SUNY Charter Schools Institute</a></div>
+    </div>
+    <div class="fbottom"><span id="builtNote">Charter Compass NYC</span><span>Map tiles © Esri, HERE, Garmin, OpenStreetMap contributors</span></div>
+  </div>
+</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="sheet-top">
+    <span id="sheetStatus"></span>
+    <div style="display:flex;gap:4px">
+      <button class="heart" id="sheetHeart" aria-pressed="false" aria-label="Save to my list"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1.1 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.5 3.4 4.1 6.7C19.5 16.4 12 21 12 21z"/></svg></button>
+      <button class="icon-btn" id="sheetClose" aria-label="Close profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </div>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</aside>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="bubble" id="bubble" aria-hidden="true"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.min.js"></script>
+<script>
+(() => {
+"use strict";
+
+const AUTH = {
+  S: { label: "SUNY", long: "SUNY Charter Schools Institute" },
+  R: { label: "Regents", long: "NYS Board of Regents" },
+  D: { label: "NYC DOE", long: "NYC Department of Education" },
+};
+const BOROS = ["Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island"];
+const NYSED_URL = "https://www.nysed.gov/charter-schools/charter-schools-directory";
+
+const byName = (a, b) => a.name.localeCompare(b.name);
+const median = arr => {
+  const v = arr.filter(x => x != null).sort((a, b) => a - b);
+  if (!v.length) return null;
+  const m = v.length >> 1;
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+};
+const fmt = n => n == null ? "—" : Math.round(n).toLocaleString("en-US");
+const ratio = s => s.enroll && s.teachers ? s.enroll / s.teachers : null;
+const gradeSpan = s => s.grades && s.grades[0] ? (s.grades[0] === s.grades[1] ? s.grades[0] : `${s.grades[0]}–${s.grades[1]}`) : null;
+const gradeNum = g => g === "PK" ? -1 : g === "K" ? 0 : +g;
+const servesHS = s => s.grades && s.grades[1] && gradeNum(s.grades[1]) >= 9;
+const sizeWord = n => n == null ? null : n < 300 ? "Small" : n < 700 ? "Mid-size" : "Big";
+const pct = (n, d) => d ? Math.round(100 * n / d) + "%" : "—";
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const INFO = {
+  enroll: "Students enrolled, as reported to the federal Common Core of Data (NCES). Newer schools are often still adding grades, so small can just mean young.",
+  ratio: "Enrollment divided by full-time-equivalent teachers. Lower usually means smaller classes, but schools count co-teachers and aides differently. Treat it as a rough guide.",
+  loc: "Exact pins come from the school's address on file with NCES. Schools opening in 2025–26 aren't in federal data yet, so they're dropped somewhere inside their district.",
+  network: "We group schools whose names share a family name, like 'Success Academy' or 'KIPP'. It's a good guess, but some networks use different names and some names are coincidences.",
+};
+
+const LENSES = {
+  parent: {
+    emoji: "🧒", name: "Parent", tag: "Track record first",
+    blurb: "Can my kid get in? Is it good? Is it close?",
+    eyebrow: "Parent lens", head: "The longest track records, first.",
+    sub: "Sorted oldest first, because years in operation tell you something. Turn on Near me to sort by distance.",
+    sort: (a, b) => a.year - b.year || byName(a, b),
+    sortLabel: "Oldest first",
+    meta: s => [gradeSpan(s) && `Grades ${gradeSpan(s)}`, s.year < 2026 ? `since ${s.year}` : "opening 2026"].filter(Boolean).join(" · "),
+    stats: L => [
+      { v: fmt(median(L.map(s => s.enroll))), l: "Typical school size", info: INFO.enroll },
+      { v: pct(L.filter(s => s.grades && gradeNum(s.grades[0]) <= 0).length, L.length), l: "Start at Pre-K or K" },
+      { v: pct(L.filter(s => s.year <= 2015).length, L.length), l: "Open 10+ years" },
+    ],
+    checkTitle: "Before you apply.",
+    checks: [
+      "Most NYC charters share one application. The deadline is usually April 1, but confirm with each school.",
+      "Admission is a random lottery. Siblings and families who live in the district usually get priority. Ask how many seats open in your child's grade, not just in kindergarten.",
+      `Look up state test results on <a href="https://data.nysed.gov/" target="_blank" rel="noopener">data.nysed.gov</a>. Compare with schools that serve similar students, not the citywide average.`,
+      "Visit during a normal school day. Watch a hallway change, and ask about special education, English learner support and discipline.",
+      "Test the commute at real drop-off time. A short trip on the map can turn into a 50-minute bus ride.",
+    ],
+    facts: ["grades", "enroll", "since", "auth"],
+  },
+  teacher: {
+    emoji: "🍎", name: "Teacher", tag: "Biggest networks first",
+    blurb: "Is this somewhere I'd want to work?",
+    eyebrow: "Teacher lens", head: "Big networks up top, independents below.",
+    sub: "Networks mean career ladders and shared curriculum. Independents often mean more say. Both are worth a look.",
+    sort: (a, b) => b.netSize - a.netSize || a.network.localeCompare(b.network) || byName(a, b),
+    sortLabel: "Network size",
+    meta: s => [s.network === "Independent" ? "Independent" : `${s.network} · ${s.netSize} schools`, ratio(s) && `${ratio(s).toFixed(0)} students per teacher`].filter(Boolean).join(" · "),
+    stats: L => [
+      { v: fmt(new Set(L.filter(s => s.network !== "Independent").map(s => s.network)).size), l: "Networks shown", info: INFO.network },
+      { v: pct(L.filter(s => s.network !== "Independent").length, L.length), l: "Schools in a network" },
+      { v: (median(L.map(ratio)) ?? 0).toFixed(1), l: "Students per teacher (typical)", info: INFO.ratio },
+    ],
+    checkTitle: "Before you interview.",
+    checks: [
+      "Check the network's careers page. Big networks hire all year and often have resident-teacher programs.",
+      "Ask how many teachers came back this year. Retention is the most honest culture metric, and schools know the number.",
+      "Ask about coaching, planning periods and who writes the curriculum. It changes your week more than the salary schedule does.",
+      "Confirm your certification fits. NY charters have some flexibility, but rules differ by subject and role.",
+      "Ask whether the school shares a building with another school. It affects space, schedules and mood.",
+    ],
+    facts: ["network", "ratio", "enroll", "auth"],
+  },
+  student: {
+    emoji: "🎒", name: "Student", tag: "A to Z",
+    blurb: "What's it like? What would I get out of it?",
+    eyebrow: "Student lens", head: "Every school, A to Z. Go explore.",
+    sub: "Look for schools that teach your grade, then check out the vibe. Small, mid-size or big? There's no wrong answer.",
+    sort: byName,
+    sortLabel: "A–Z",
+    meta: s => [gradeSpan(s) && `Grades ${gradeSpan(s)}`, s.enroll && `${sizeWord(s.enroll)} · ${fmt(s.enroll)} students`].filter(Boolean).join(" · "),
+    stats: L => [
+      { v: fmt(L.filter(servesHS).length), l: "Teach high school grades" },
+      { v: fmt(L.filter(s => s.enroll && s.enroll < 300).length), l: "Small schools (under 300)", info: INFO.enroll },
+      { v: fmt(new Set(L.map(s => s.boro)).size), l: "Boroughs covered" },
+    ],
+    checkTitle: "Questions worth asking.",
+    checks: [
+      "Ask a current student what a normal Tuesday is like. Then ask what they'd change.",
+      "Clubs, sports, music, robotics? Ask for the real list for this year, not the brochure.",
+      `For high schools, look up graduation and college-going rates on <a href="https://data.nysed.gov/" target="_blank" rel="noopener">data.nysed.gov</a>.`,
+      "Check the rules: uniform, phones, homework, longer school days. Some charters run until 4 or later.",
+      "Ride the trip once. Is it a commute you could do every day?",
+    ],
+    facts: ["grades", "enroll", "size", "since"],
+  },
+  enterprise: {
+    emoji: "📈", name: "Enterprise", tag: "Newest first",
+    blurb: "Funders, real estate, edtech, research: growth, gaps, opportunities.",
+    eyebrow: "Enterprise lens", head: "The newest schools and the 2026 pipeline, first.",
+    sub: "New schools mean facilities searches, vendor decisions and grades still being added. Shade districts to spot gaps.",
+    sort: (a, b) => b.year - a.year || byName(a, b),
+    sortLabel: "Newest first",
+    meta: s => [s.year >= 2026 ? "Opening 2026" : `Opened ${s.year}`, AUTH[s.auth].label, s.enroll && `${fmt(s.enroll)} students`].filter(Boolean).join(" · "),
+    stats: L => [
+      { v: fmt(L.filter(s => s.year >= 2025).length), l: "Opened 2025 or opening 2026" },
+      { v: fmt(L.reduce((t, s) => t + (s.enroll || 0), 0)), l: "Students enrolled", info: INFO.enroll },
+      { v: pct(L.filter(s => s.netSize >= 5).length, L.length), l: "In networks of 5+", info: INFO.network },
+    ],
+    checkTitle: "Due diligence, in order.",
+    checks: [
+      "Pull renewal history and the latest renewal report from the authorizer: SUNY CSI, the Board of Regents, or NYC DOE.",
+      "Read the audited financial statements. Look for enrollment against budgeted seats and months of cash on hand.",
+      "Find out the facility situation: shared DOE building, private lease, or owned. New schools are actively looking.",
+      "Compare districts. Turn on Shade districts and look for areas with few seats but plenty of school-age kids.",
+      "Watch the pipeline. 2025–26 openers are adding grades every year, so needs grow with them.",
+    ],
+    facts: ["since", "auth", "enroll", "network"],
+  },
+};
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+const state = {
+  lens: null, q: "", boro: null, auth: null, mine: false, heat: false,
+  me: null, saved: new Set(store.get("cc-saved", [])), limit: 60, open: null,
+};
+let SCHOOLS = [], META = {}, BY_ID = new Map();
+let map, cluster, tiles, boroLayer, distLayer, meMarker;
+const markers = new Map();
+
+/* ---------- theme ---------- */
+const root = document.documentElement;
+const savedTheme = store.get("cc-theme", null);
+if (savedTheme) root.dataset.theme = savedTheme;
+const isDark = () => root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+const cssVar = n => getComputedStyle(root).getPropertyValue(n).trim();
+$("#themeBtn").addEventListener("click", () => {
+  root.dataset.theme = isDark() ? "light" : "dark";
+  store.set("cc-theme", root.dataset.theme);
+  onTheme();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { if (!root.dataset.theme) onTheme(); });
+
+/* ---------- nav + reveals ---------- */
+const nav = $("#nav");
+addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 8), { passive: true });
+const io = "IntersectionObserver" in window ? new IntersectionObserver(es => es.forEach(e => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), { rootMargin: "0px 0px -8% 0px" }) : null;
+const observe = el => io ? io.observe(el) : el.classList.add("in");
+document.querySelectorAll(".reveal").forEach(observe);
+
+let toastT;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2600);
+}
+
+/* ---------- lens picker ---------- */
+function renderLenses() {
+  $("#lenses").innerHTML = Object.entries(LENSES).map(([k, L]) => `
+    <button class="lens-card reveal" data-lens="${k}" aria-pressed="${state.lens === k}">
+      <div class="lens-face">
+        <div class="lens-art" aria-hidden="true"><span class="tag tag-ghost">${L.tag}</span>${L.emoji}</div>
+        <div class="lens-info">
+          <div class="lens-name">${L.name}</div>
+          <div class="lens-meta">${L.blurb}</div>
+          <div class="lens-status">${state.lens === k ? "Lens on ✓" : "Use this lens →"}</div>
+        </div>
+      </div>
+    </button>`).join("");
+  $("#lenses").querySelectorAll(".lens-card").forEach(b => {
+    observe(b);
+    b.addEventListener("click", () => setLens(b.dataset.lens, true));
+  });
+}
+
+function setLens(k, scroll) {
+  const changed = state.lens !== k;
+  state.lens = k; store.set("cc-lens", k);
+  document.querySelectorAll(".lens-card").forEach(b => {
+    const on = b.dataset.lens === k;
+    b.setAttribute("aria-pressed", on);
+    b.querySelector(".lens-status").textContent = on ? "Lens on ✓" : "Use this lens →";
+    b.classList.add("in");
+  });
+  $("#lensBtn").textContent = `${LENSES[k].emoji} Switch lens`;
+  const swaps = document.querySelectorAll(".swap");
+  if (changed) swaps.forEach(el => el.classList.add("out"));
+  setTimeout(() => {
+    renderHead(); render();
+    swaps.forEach(el => el.classList.remove("out"));
+    if (state.open) openSheet(state.open, false);
+  }, changed ? 220 : 0);
+  if (scroll) setTimeout(() => $("#explore").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }), 120);
+  if (changed && scroll) toast(`${LENSES[k].emoji} ${LENSES[k].name} lens on. List re-sorted.`);
+}
+
+function renderHead() {
+  const L = LENSES[state.lens];
+  $("#lensEyebrow").textContent = L ? L.eyebrow : "The map";
+  $("#exploreTitle").textContent = L ? L.head : "Every charter school in the city.";
+  $("#lensSub").textContent = L ? L.sub : "Tap a dot to open its profile. Pick a lens up top and the list re-sorts itself.";
+  $("#checkWrap").hidden = !L;
+  if (L) {
+    $("#checkTitle").textContent = L.checkTitle;
+    $("#checks").innerHTML = L.checks.map(c => `<li><span>${c}</span></li>`).join("");
+  }
+}
+
+/* ---------- filters ---------- */
+function pills(el, items, key) {
+  el.innerHTML = items.map(([v, label, color]) => `<button class="pill" data-v="${v ?? ""}" aria-pressed="${state[key] === v}">${color ? `<span class="dot" style="background:var(${color})"></span>` : ""}${label}</button>`).join("");
+  el.querySelectorAll(".pill").forEach(b => b.addEventListener("click", () => {
+    const v = b.dataset.v || null;
+    state[key] = state[key] === v ? null : v;
+    el.querySelectorAll(".pill").forEach(p => p.setAttribute("aria-pressed", (p.dataset.v || null) === state[key]));
+    state.limit = 60; render(true);
+  }));
+}
+
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  return SCHOOLS.filter(s =>
+    (!state.boro || s.boro === state.boro) &&
+    (!state.auth || s.auth === state.auth) &&
+    (!state.mine || state.saved.has(s.id)) &&
+    (!q || s.name.toLowerCase().includes(q) || s.network.toLowerCase().includes(q) || (s.address || "").toLowerCase().includes(q) || `district ${s.csd}` === q)
+  );
+}
+
+function sorted(list) {
+  const L = LENSES[state.lens];
+  if (state.me) return list.slice().sort((a, b) => a._d - b._d);
+  return list.slice().sort(L ? L.sort : byName);
+}
+
+/* ---------- distance ---------- */
+function miles(a, b) {
+  const R = 3958.8, r = x => x * Math.PI / 180;
+  const dLat = r(b.lat - a.lat), dLon = r(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const distText = s => state.me ? `${s.loc === "approx" ? "~" : ""}${s._d < 0.1 ? "<0.1" : s._d.toFixed(1)} mi` : null;
+
+$("#nearBtn").addEventListener("click", () => {
+  if (state.me) {
+    state.me = null; $("#nearBtn").setAttribute("aria-pressed", false);
+    if (meMarker) { meMarker.remove(); meMarker = null; }
+    render(); return;
+  }
+  if (!navigator.geolocation) return toast("Your browser can't share location.");
+  toast("Finding you…");
+  navigator.geolocation.getCurrentPosition(p => {
+    const me = { lat: p.coords.latitude, lon: p.coords.longitude };
+    if (me.lat < 40.45 || me.lat > 40.95 || me.lon < -74.3 || me.lon > -73.65) toast("You look outside NYC. Sorting by distance anyway.");
+    else toast("Sorted by distance from you.");
+    state.me = me;
+    SCHOOLS.forEach(s => s._d = miles(me, s));
+    $("#nearBtn").setAttribute("aria-pressed", true);
+    meMarker?.remove();
+    meMarker = L.marker([me.lat, me.lon], { icon: L.divIcon({ className: "", html: '<div class="me-pin"></div>', iconSize: [16, 16] }), keyboard: false, interactive: false }).addTo(map);
+    map.flyTo([me.lat, me.lon], 14, { duration: .8 });
+    render();
+  }, () => toast("Couldn't get your location. Try search instead."), { enableHighAccuracy: false, timeout: 10000 });
+});
+
+$("#mineBtn").addEventListener("click", () => {
+  state.mine = !state.mine;
+  $("#mineBtn").setAttribute("aria-pressed", state.mine);
+  if (state.mine && !state.saved.size) toast("Tap ♥ on any school to start your list.");
+  render(true);
+});
+
+$("#surpriseBtn").addEventListener("click", () => {
+  const L = filtered();
+  if (!L.length) return toast("Nothing to pick from. Loosen a filter?");
+  const s = L[Math.floor(Math.random() * L.length)];
+  toast(["How about this one?", "Ooh, a good one.", "Spin the globe… landed!", "Here's a wildcard."][Math.floor(Math.random() * 4)]);
+  focusSchool(s.id);
+});
+
+let qT;
+$("#q").addEventListener("input", e => { clearTimeout(qT); qT = setTimeout(() => { state.q = e.target.value; state.limit = 60; render(true); }, 120); });
+
+/* ---------- saved ---------- */
+function toggleSave(id) {
+  const had = state.saved.has(id);
+  had ? state.saved.delete(id) : state.saved.add(id);
+  store.set("cc-saved", [...state.saved]);
+  toast(had ? "Removed from your list." : `Saved. ${state.saved.size} on your list.`);
+  updateMine();
+  if (state.mine) render(); else document.querySelectorAll(`.heart[data-id="${id}"]`).forEach(h => h.setAttribute("aria-pressed", !had));
+  if (state.open === id) $("#sheetHeart").setAttribute("aria-pressed", !had);
+}
+function updateMine() { $("#mineCount").textContent = state.saved.size ? `(${state.saved.size})` : ""; }
+
+/* ---------- "how to read this" tips: one fixed bubble, clamped to the viewport ---------- */
+const bubble = $("#bubble");
+function showTip(el) {
+  bubble.textContent = el.dataset.tip;
+  bubble.classList.add("on");
+  const r = el.getBoundingClientRect(), b = bubble.getBoundingClientRect();
+  const x = Math.max(16, Math.min(innerWidth - b.width - 16, r.left + r.width / 2 - b.width / 2));
+  const y = r.top - b.height - 8 < 8 ? r.bottom + 8 : r.top - b.height - 8;
+  bubble.style.transform = `translate(${x}px,${y}px)`;
+}
+const hideTip = () => bubble.classList.remove("on");
+document.addEventListener("mouseover", e => { const i = e.target.closest?.(".info"); i ? showTip(i) : hideTip(); });
+document.addEventListener("focusin", e => { const i = e.target.closest?.(".info"); i ? showTip(i) : hideTip(); });
+addEventListener("scroll", hideTip, { passive: true });
+
+/* ---------- list + insights ---------- */
+const heartSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1.1 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.5 3.4 4.1 6.7C19.5 16.4 12 21 12 21z"/></svg>';
+const infoTip = t => `<i class="info" tabindex="0" role="note" aria-label="How to read this: ${esc(t)}" data-tip="${esc(t)}">i</i>`;
+
+function render(fit) {
+  const list = sorted(filtered());
+  const L = LENSES[state.lens];
+
+  const stats = L ? L.stats(list) : [
+    { v: fmt(list.length), l: "Schools shown" },
+    { v: fmt(list.reduce((t, s) => t + (s.enroll || 0), 0)), l: "Students enrolled", info: INFO.enroll },
+    { v: pct(list.filter(s => s.loc === "exact").length, list.length), l: "Pinned to an exact address", info: INFO.loc },
+  ];
+  $("#insights").innerHTML = stats.map(s => `<div class="stat"><div class="stat-v">${s.v}</div><div class="stat-l">${s.l}${s.info ? infoTip(s.info) : ""}</div></div>`).join("");
+
+  $("#listCount").innerHTML = `<b>${list.length}</b> of ${SCHOOLS.length} schools`;
+  $("#listSort").textContent = state.me ? "Nearest first" : L ? L.sortLabel : "A–Z";
+
+  const el = $("#list");
+  if (!list.length) {
+    el.innerHTML = state.mine && !state.saved.size
+      ? `<div class="empty"><b>Your list is empty.</b>Tap ♥ next to any school and it'll show up here.</div>`
+      : `<div class="empty"><b>No matches.</b>Try a different search or clear a filter.</div>`;
+  } else {
+    el.innerHTML = list.slice(0, state.limit).map(s => {
+      const meta = [distText(s), L ? L.meta(s) : `${s.boro} · District ${s.csd}`].filter(Boolean).join(" · ");
+      return `<div class="item" role="listitem" data-id="${s.id}" tabindex="0">
+        <span class="dot${s.loc === "approx" ? " approx" : ""}" style="background:var(--a-${s.auth})" title="${AUTH[s.auth].label}"></span>
+        <div class="item-main"><div class="item-name">${esc(s.name)}</div><div class="item-meta">${esc(meta)}</div></div>
+        <button class="heart" data-id="${s.id}" aria-pressed="${state.saved.has(s.id)}" aria-label="Save ${esc(s.name)}">${heartSvg}</button>
+      </div>`;
+    }).join("") + (list.length > state.limit ? `<div class="more"><button class="btn btn-ghost" id="moreBtn">Show ${Math.min(60, list.length - state.limit)} more</button></div>` : "")
+      + (state.mine && state.saved.size ? `<div class="more"><button class="btn btn-ghost" id="shareBtn">Copy a link to my list</button></div>` : "");
+  }
+  el.querySelectorAll(".item").forEach(it => {
+    const id = it.dataset.id;
+    it.addEventListener("click", e => { if (!e.target.closest(".heart")) focusSchool(id); });
+    it.addEventListener("keydown", e => { if (e.key === "Enter") focusSchool(id); });
+    it.addEventListener("mouseenter", () => hot(id, true));
+    it.addEventListener("mouseleave", () => hot(id, false));
+  });
+  el.querySelectorAll(".heart").forEach(h => h.addEventListener("click", () => toggleSave(h.dataset.id)));
+  $("#moreBtn")?.addEventListener("click", () => { state.limit += 60; render(); });
+  $("#shareBtn")?.addEventListener("click", shareList);
+
+  renderMap(list, fit);
+}
+
+function shareList() {
+  const url = `${location.origin}${location.pathname}#list=${[...state.saved].join(",")}`;
+  const done = () => toast("Link copied. Send it to whoever you're deciding with.");
+  navigator.clipboard?.writeText(url).then(done, () => prompt("Copy this link:", url)) ?? prompt("Copy this link:", url);
+}
+
+/* ---------- map ---------- */
+// Esri gray canvas: keyless and muted. Labels sit in their own pane, under the school dots.
+const TILE = (d, layer) => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${d ? "Dark" : "Light"}_Gray_${layer}/MapServer/tile/{z}/{y}/{x}`;
+
+function radius(s) { return Math.min(4.5 + Math.sqrt(s.netSize) * 1.1, 11.5); }
+function style(s, on) {
+  const c = cssVar(`--a-${s.auth}`), bg = cssVar("--bg");
+  return s.loc === "approx"
+    ? { radius: radius(s) + (on ? 3 : 0), color: c, weight: on ? 2.5 : 1.8, dashArray: "2 2.5", fillColor: c, fillOpacity: .18, opacity: 1 }
+    : { radius: radius(s) + (on ? 3 : 0), color: on ? cssVar("--ink") : bg, weight: on ? 2.5 : 1.5, fillColor: c, fillOpacity: .95, opacity: 1 };
+}
+
+function initMap() {
+  map = L.map("map", { zoomControl: false, maxZoom: 16, scrollWheelZoom: false, minZoom: 10, maxBounds: [[40.35, -74.45], [41.05, -73.5]] }).setView([40.70, -73.94], 11);
+  L.control.zoom({ position: "bottomright" }).addTo(map);
+  map.on("click", () => map.scrollWheelZoom.enable());
+  map.on("mouseout", () => map.scrollWheelZoom.disable());
+  map.createPane("labels").style.zIndex = 350;
+  map.getPane("labels").style.pointerEvents = "none";
+  tiles = [
+    L.tileLayer(TILE(isDark(), "Base"), { maxZoom: 16, attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors' }),
+    L.tileLayer(TILE(isDark(), "Reference"), { maxZoom: 16, pane: "labels" }),
+  ];
+  tiles.forEach(t => t.addTo(map));
+
+  cluster = L.markerClusterGroup({
+    showCoverageOnHover: false, maxClusterRadius: z => z >= 14 ? 14 : 38, spiderfyOnMaxZoom: true, spiderLegPolylineOptions: { weight: 1, opacity: .4 },
+    iconCreateFunction: c => {
+      const n = c.getChildCount(), sz = n < 10 ? 30 : n < 30 ? 36 : 44;
+      return L.divIcon({ className: "", html: `<div class="cluster" style="width:${sz}px;height:${sz}px">${n}</div>`, iconSize: [sz, sz] });
+    },
+  });
+  SCHOOLS.forEach(s => {
+    const m = L.circleMarker([s.lat, s.lon], style(s, false));
+    m.bindTooltip(() => `<strong>${esc(s.name)}</strong><small>${s.boro} · District ${s.csd} · ${AUTH[s.auth].label}${s.loc === "approx" ? " · approximate pin" : ""}</small>`, { className: "tip", direction: "top", offset: [0, -8] });
+    m.on("click", () => openSheet(s.id, true));
+    m.on("mouseover", () => document.querySelector(`.item[data-id="${s.id}"]`)?.classList.add("hot"));
+    m.on("mouseout", () => document.querySelector(`.item[data-id="${s.id}"]`)?.classList.remove("hot"));
+    markers.set(s.id, m);
+  });
+  map.addLayer(cluster);
+  renderLegend();
+}
+
+function addBoundaries(boros, districts) {
+  const counts = {};
+  SCHOOLS.forEach(s => counts[s.csd] = (counts[s.csd] || 0) + 1);
+  const maxC = Math.max(...Object.values(counts));
+  distLayer = L.geoJSON(districts, {
+    interactive: true,
+    style: () => ({ weight: 0, fillOpacity: 0 }),
+    onEachFeature: (f, layer) => {
+      const n = counts[+f.properties.id] || 0;
+      f.properties.n = n; f.properties.share = n / maxC;
+      layer.bindTooltip(`<strong>District ${f.properties.id}</strong><small>${n} charter school${n === 1 ? "" : "s"}</small>`, { className: "tip", sticky: true });
+    },
+  });
+  boroLayer = L.geoJSON(boros, { interactive: false, style: boroStyle }).addTo(map);
+  boroLayer.bringToBack();
+}
+function boroStyle(f) {
+  const on = !state.boro || state.boro === f.properties.id;
+  return { color: cssVar("--ink-dim"), weight: on && state.boro ? 1.6 : .8, opacity: on ? .55 : .25, fillColor: cssVar("--bg-alt"), fillOpacity: on ? 0 : .55 };
+}
+function distStyle(f) {
+  // Sequential: one hue (accent), opacity steps light→dark by school count.
+  const steps = [0, .12, .24, .38, .55];
+  const i = f.properties.n ? Math.min(4, 1 + Math.floor(f.properties.share * 3.999)) : 0;
+  return { color: cssVar("--accent"), weight: .6, opacity: .5, fillColor: cssVar("--accent"), fillOpacity: steps[i] };
+}
+
+$("#heatBtn").addEventListener("click", () => {
+  state.heat = !state.heat;
+  $("#heatBtn").setAttribute("aria-pressed", state.heat);
+  if (state.heat) { distLayer.setStyle(distStyle).addTo(map); distLayer.bringToBack(); boroLayer.bringToBack(); }
+  else distLayer.remove();
+  renderLegend();
+});
+
+function renderLegend() {
+  const n = Object.keys(AUTH).map(k => `<div class="row"><span class="dot" style="background:var(--a-${k})"></span>${AUTH[k].label}</div>`).join("");
+  const heat = state.heat ? `<div class="row ramp" title="Charter schools per district">Fewer ${[.12, .24, .38, .55].map(o => `<i style="opacity:${o * 1.6}"></i>`).join("")} More</div>` : "";
+  $("#legend").innerHTML = `${n}<div class="row"><span class="ring"></span>Approximate pin</div><div class="row" style="opacity:.8">Bigger dot = bigger network</div>${heat}`;
+}
+
+function renderMap(list, fit) {
+  if (!map) return;
+  cluster.clearLayers();
+  cluster.addLayers(list.map(s => markers.get(s.id)));
+  boroLayer?.setStyle(boroStyle);
+  if (fit && list.length && list.length < SCHOOLS.length) {
+    const b = L.latLngBounds(list.map(s => [s.lat, s.lon]));
+    map.flyToBounds(b.pad(.15), { maxZoom: 14, duration: .7 });
+  } else if (fit && list.length === SCHOOLS.length) {
+    map.flyTo([40.70, -73.94], 11, { duration: .7 });
+  }
+}
+
+function hot(id, on) {
+  const m = markers.get(id), s = BY_ID.get(id);
+  if (!m || !cluster.hasLayer(m)) return;
+  m.setStyle(style(s, on || state.open === id));
+  if (on && m._map) m.bringToFront();
+}
+
+function focusSchool(id) {
+  const s = BY_ID.get(id), m = markers.get(id);
+  if (!s) return;
+  if (!cluster.hasLayer(m)) {
+    // A hidden school (e.g. from a shared link or Surprise me) — clear filters so it shows.
+    state.boro = state.auth = null; state.mine = false; state.q = ""; $("#q").value = "";
+    document.querySelectorAll("#boroPills .pill,#authPills .pill").forEach(p => p.setAttribute("aria-pressed", false));
+    $("#mineBtn").setAttribute("aria-pressed", false);
+    render();
+  }
+  cluster.zoomToShowLayer(m, () => map.panTo([s.lat, s.lon], { animate: true }));
+  openSheet(id, true);
+}
+
+function onTheme() {
+  if (!map) return;
+  tiles[0].setUrl(TILE(isDark(), "Base")); tiles[1].setUrl(TILE(isDark(), "Reference"));
+  SCHOOLS.forEach(s => markers.get(s.id).setStyle(style(s, state.open === s.id)));
+  boroLayer?.setStyle(boroStyle);
+  if (state.heat) distLayer.setStyle(distStyle);
+  drawChart();
+}
+
+/* ---------- profile sheet ---------- */
+function factHTML(key, s) {
+  const r = ratio(s);
+  const F = {
+    grades: ["Grades", gradeSpan(s) || "Not yet reported"],
+    enroll: ["Students", s.enroll ? `${fmt(s.enroll)} <small>(${s.ccdYear}–${String(s.ccdYear + 1).slice(2)})</small>` : "Not yet reported", INFO.enroll],
+    since: [s.year >= 2026 ? "Opens" : "Opened", s.year >= 2026 ? "Fall 2026" : `${s.year} <small>(${2026 - s.year} yr${2026 - s.year === 1 ? "" : "s"})</small>`],
+    auth: ["Authorizer", AUTH[s.auth].label],
+    network: ["Network", s.network === "Independent" ? "Independent" : `${esc(s.network)} <small>(${s.netSize} in NYC)</small>`, INFO.network],
+    ratio: ["Students per teacher", r ? r.toFixed(1) : "Not reported", INFO.ratio],
+    size: ["Feel", sizeWord(s.enroll) || "Brand new"],
+  }[key];
+  return `<div class="fact"><div class="fact-l">${F[0]}${F[2] ? infoTip(F[2]) : ""}</div><div class="fact-v">${F[1]}</div></div>`;
+}
+
+function openSheet(id, animate) {
+  const s = BY_ID.get(id);
+  if (!s) return;
+  const prev = state.open;
+  state.open = id;
+  if (prev && prev !== id) hot(prev, false);
+  hot(id, true);
+  const L = LENSES[state.lens];
+  const keys = L ? L.facts : ["grades", "enroll", "since", "auth"];
+  const allKeys = [...keys, ...["network", "ratio", "grades", "enroll", "since", "auth"].filter(k => !keys.includes(k))].slice(0, 6);
+  const status = s.year >= 2026 ? '<span class="tag">Opening 2026</span>' : s.year === 2025 ? '<span class="tag">New this year</span>' : `<span class="tag tag-ghost">Open since ${s.year}</span>`;
+  const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.loc === "exact" ? `${s.name}, ${s.address}` : `${s.name}, ${s.boro}, NY`)}`;
+  const d = distText(s);
+  $("#sheetStatus").innerHTML = status;
+  $("#sheetHeart").setAttribute("aria-pressed", state.saved.has(id));
+  $("#sheetBody").innerHTML = `
+    <h3 id="sheetTitle">${esc(s.name)}</h3>
+    <p class="where">${s.boro} · Community School District ${s.csd}${d ? ` · ${d} away` : ""}</p>
+    <div class="facts">${allKeys.map(k => factHTML(k, s)).join("")}</div>
+    <div class="locbox">
+      ${s.loc === "exact" ? '<span class="tag tag-ghost">Exact</span>' : '<span class="tag">Approximate</span>'}
+      <div>${s.loc === "exact" ? `${esc(s.address)}<div style="color:var(--ink-dim);font-size:12.5px;margin-top:2px">Address on file with NCES. Schools sometimes move or add campuses.</div>`
+        : `<strong>Pin placed somewhere in District ${s.csd}.</strong><div style="color:var(--ink-dim);font-size:12.5px;margin-top:2px">This school is too new for federal data, so we don't know its street address. Check Google Maps.</div>`}</div>
+    </div>
+    ${L ? `<h4>${L.emoji} What to check next</h4><ol class="checks">${L.checks.slice(0, 3).map(c => `<li><span>${c}</span></li>`).join("")}</ol>` : `<h4>Tip</h4><p style="font-size:14px;color:var(--ink-dim)">Pick a lens up top and this profile will show the facts and next steps that matter to you.</p>`}
+    <div class="links">
+      <a class="btn btn-primary" href="${gmaps}" target="_blank" rel="noopener">${s.loc === "exact" ? "Directions in Google Maps" : "Find the exact location in Google Maps"} <span aria-hidden="true">↗</span></a>
+      <a class="btn btn-ghost" href="https://data.nysed.gov/profile.php?instid=${s.inst}" target="_blank" rel="noopener">Test scores &amp; enrollment on NYSED <span aria-hidden="true">↗</span></a>
+      ${s.nces ? `<a class="btn btn-ghost" href="https://nces.ed.gov/ccd/schoolsearch/school_detail.asp?ID=${s.nces}" target="_blank" rel="noopener">Federal school record (NCES) <span aria-hidden="true">↗</span></a>` : ""}
+      <a class="btn btn-ghost" href="${NYSED_URL}" target="_blank" rel="noopener">NYSED charter directory <span aria-hidden="true">↗</span></a>
+    </div>`;
+  const sh = $("#sheet");
+  sh.classList.add("open"); sh.setAttribute("aria-hidden", "false");
+  $("#scrim").classList.add("on");
+  $("#sheetBody").scrollTop = 0;
+  if (animate) setTimeout(() => $("#sheetClose").focus({ preventScroll: true }), 50);
+  history.replaceState(null, "", `#school=${id}`);
+}
+function closeSheet() {
+  const id = state.open;
+  state.open = null;
+  if (id) hot(id, false);
+  $("#sheet").classList.remove("open"); $("#sheet").setAttribute("aria-hidden", "true");
+  $("#scrim").classList.remove("on");
+  history.replaceState(null, "", location.pathname + location.search);
+  if (id) document.querySelector(`.item[data-id="${id}"]`)?.focus({ preventScroll: true });
+}
+$("#sheetClose").addEventListener("click", closeSheet);
+$("#scrim").addEventListener("click", closeSheet);
+$("#sheetHeart").addEventListener("click", () => state.open && toggleSave(state.open));
+addEventListener("keydown", e => { if (e.key === "Escape" && state.open) closeSheet(); });
+
+/* ---------- landscape chart ---------- */
+function drawChart() {
+  if (!SCHOOLS.length) return;
+  const counts = {};
+  SCHOOLS.forEach(s => counts[s.year] = (counts[s.year] || 0) + 1);
+  const years = []; for (let y = Math.min(...SCHOOLS.map(s => s.year)); y <= 2026; y++) years.push(y);
+  const W = 1100, H = 320, P = { t: 28, r: 8, b: 30, l: 30 };
+  const max = Math.ceil(Math.max(...Object.values(counts)) / 5) * 5;
+  const bw = (W - P.l - P.r) / years.length, gap = 2;
+  const y = v => H - P.b - (v / max) * (H - P.t - P.b);
+  const peak = years.reduce((a, b) => (counts[b] || 0) > (counts[a] || 0) ? b : a);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart of current charter schools by year opened, ${years[0]} to 2026. Peak in ${peak} with ${counts[peak]} schools."><g class="grid">`;
+  for (let v = 0; v <= max; v += max / 5) svg += `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}"/><text x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  svg += "</g>";
+  years.forEach((yr, i) => {
+    const n = counts[yr] || 0, x = P.l + i * bw + gap / 2, w = bw - gap, top = y(n), h = Math.max(0, H - P.b - top);
+    // Bars: 4px rounded top, square at the baseline.
+    const r = Math.min(4, w / 2, h);
+    if (n) svg += `<path class="bar${yr >= 2025 ? " pipe" : ""}" data-i="${i}" d="M${x},${H - P.b} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${H - P.b} Z"/>`;
+    if (yr === peak || yr === 2025) svg += `<text class="lbl" x="${x + w / 2}" y="${top - 8}" text-anchor="middle">${n}</text>`;
+    if (yr % 5 === 0 || yr === 2026) svg += `<text x="${x + w / 2}" y="${H - 10}" text-anchor="middle">${yr === 2026 ? "’26" : yr}</text>`;
+    svg += `<rect class="hit" x="${P.l + i * bw}" y="${P.t}" width="${bw}" height="${H - P.t - P.b}" data-i="${i}" data-y="${yr}" data-n="${n}" data-cx="${x + w / 2}" data-cy="${top}"/>`;
+  });
+  svg += "</svg>";
+  const c = $("#chart"), tip = $("#chartTip");
+  c.querySelector("svg")?.remove();
+  c.insertAdjacentHTML("afterbegin", svg);
+  const el = c.querySelector("svg");
+  el.querySelectorAll(".hit").forEach(h => {
+    h.addEventListener("mouseenter", () => {
+      const k = el.getBoundingClientRect().width / W, yr = +h.dataset.y, n = +h.dataset.n;
+      tip.innerHTML = `<strong>${yr === 2026 ? "Opening 2026" : yr}</strong> · ${n} school${n === 1 ? "" : "s"}`;
+      tip.style.left = h.dataset.cx * k + "px"; tip.style.top = h.dataset.cy * k + "px"; tip.style.opacity = 1;
+      el.querySelectorAll(".bar").forEach(b => b.style.opacity = .45);
+      const bar = el.querySelector(`.bar[data-i="${h.dataset.i}"]`);
+      if (bar) bar.style.opacity = 1;
+    });
+    h.addEventListener("mouseleave", () => { tip.style.opacity = 0; el.querySelectorAll(".bar").forEach(b => b.style.opacity = 1); });
+  });
+  $("#chartTable tbody").innerHTML = years.map(yr => `<tr><td>${yr === 2026 ? "2026 (opening)" : yr}</td><td>${counts[yr] || 0}</td></tr>`).join("");
+  $("#landTitle").textContent = `${2026 - years[0]} years of openings.`;
+}
+
+function drawBoros() {
+  const c = {}; SCHOOLS.forEach(s => c[s.boro] = (c[s.boro] || 0) + 1);
+  const max = Math.max(...Object.values(c));
+  $("#boros").innerHTML = BOROS.map(b => `<button class="boro" data-b="${b}" style="text-align:left"><div class="boro-n">${c[b] || 0}</div><div class="boro-l">${b}</div><div class="boro-bar"><i style="transform:scaleX(${(c[b] || 0) / max})"></i></div></button>`).join("");
+  $("#boros").querySelectorAll(".boro").forEach(b => b.addEventListener("click", () => {
+    state.boro = b.dataset.b;
+    document.querySelectorAll("#boroPills .pill").forEach(p => p.setAttribute("aria-pressed", p.dataset.v === state.boro));
+    render(true);
+    $("#explore").scrollIntoView({ behavior: "smooth" });
+  }));
+}
+
+/* ---------- boot ---------- */
+function renderStatic() {
+  const n = SCHOOLS.length;
+  document.querySelectorAll("[data-count]").forEach(e => e.textContent = n);
+  const nets = new Set(SCHOOLS.filter(s => s.network !== "Independent").map(s => s.network)).size;
+  $("#strip").innerHTML = [
+    [n, "schools"], [META.exact, "on exact addresses"], [fmt(SCHOOLS.reduce((t, s) => t + (s.enroll || 0), 0)), "students"],
+    [nets, "networks"], [SCHOOLS.filter(s => s.year >= 2025).length, "new for 2025–26"],
+  ].map(([v, l]) => `<div><b>${v}</b> ${l}</div>`).join("");
+  $("#dataNotes").innerHTML = [
+    ["The school list", `All ${n} NYC schools in the <a href="${META.sources.roster.url}" target="_blank" rel="noopener">${META.sources.roster.label}</a>: name, district, year opened, authorizer.`],
+    ["Locations", `${META.exact} schools are pinned to the address they reported to the <a href="${META.sources.locations.url}" target="_blank" rel="noopener">${META.sources.locations.label}</a>. The other ${n - META.exact} opened in 2025 or open in 2026 and aren't in federal data yet, so each sits at an approximate spot inside its district, drawn with a dashed ring.`],
+    ["Enrollment & teachers", "Also from NCES, for the latest year each school reported. Students per teacher uses full-time-equivalent teachers. It's a rough guide, not class size."],
+    ["Networks", INFO.network],
+    ["Boundaries", `Borough and community school district outlines come from <a href="${META.sources.boundaries.url}" target="_blank" rel="noopener">${META.sources.boundaries.label}</a>, lightly simplified.`],
+    ["Not here (yet)", "Test scores, lottery odds, waitlists, salaries and graduation rates. Each profile links to the NYSED data site, which has test scores and graduation rates. Compare schools that serve similar students, because populations vary a lot."],
+    ["Quirks", "The state lists each school under the district it's chartered in. About 20 schools are physically in a neighboring district, and two sit just across a borough line."],
+  ].map(([k, v]) => `<div class="detail-row"><span>${k}</span><span>${v}</span></div>`).join("");
+  $("#builtNote").textContent = `Data built ${META.built}. Not affiliated with NYSED or NYC DOE.`;
+  pills($("#boroPills"), [[null, "All boroughs"], ...BOROS.map(b => [b, b])], "boro");
+  pills($("#authPills"), [[null, "All authorizers"], ...Object.entries(AUTH).map(([k, a]) => [k, a.label, `--a-${k}`])], "auth");
+  updateMine();
+}
+
+function readHash() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get("list")) {
+    const ids = h.get("list").split(",").filter(id => BY_ID.has(id));
+    if (ids.length) {
+      ids.forEach(id => state.saved.add(id)); store.set("cc-saved", [...state.saved]);
+      state.mine = true; $("#mineBtn").setAttribute("aria-pressed", true); updateMine();
+      toast(`Shared list loaded: ${ids.length} school${ids.length === 1 ? "" : "s"}.`);
+      setTimeout(() => $("#explore").scrollIntoView(), 300);
+      return { fit: true };
+    }
+  }
+  if (h.get("school") && BY_ID.has(h.get("school"))) return { school: h.get("school") };
+  return {};
+}
+
+async function boot() {
+  renderLenses();
+  try {
+    const [data, boros, dists] = await Promise.all(["data/schools.json", "data/boroughs.geojson", "data/districts.geojson"].map(u => fetch(u).then(r => { if (!r.ok) throw new Error(u); return r.json(); })));
+    SCHOOLS = data.schools; META = data.meta;
+    SCHOOLS.forEach(s => BY_ID.set(s.id, s));
+    renderStatic();
+    initMap();
+    addBoundaries(boros, dists);
+    const lens = store.get("cc-lens", null);
+    const h = readHash();
+    if (lens && LENSES[lens]) setLens(lens, false); else { renderHead(); render(h.fit); }
+    if (h.fit) render(true);
+    if (h.school) setTimeout(() => focusSchool(h.school), 400);
+    drawChart(); drawBoros();
+  } catch (err) {
+    console.error(err);
+    const msg = location.protocol === "file:"
+      ? "Browsers block loading data files from disk. In this folder, run <code>python3 -m http.server</code>, then open <a href=\"http://localhost:8000\" style=\"text-decoration:underline\">localhost:8000</a>."
+      : "Couldn't load the school data. Refresh to try again.";
+    $("#list").innerHTML = `<div class="empty"><b>The map is waiting on its data.</b>${msg}</div>`;
+    $("#listCount").textContent = "";
+  }
+}
+boot();
+})();
+</script>
+</body>
+</html>
