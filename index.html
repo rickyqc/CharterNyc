@@ -104,7 +104,11 @@ input{font:inherit;color:inherit}
 .stat{border-top:1px solid var(--line);padding-top:18px}
 .stat-v{font-family:var(--font-display);font-size:40px;font-weight:500;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat-l{color:var(--ink-dim);font-size:14px;display:flex;align-items:center;gap:6px}
-.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:22px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
+.controls.last{margin-bottom:22px}
+.reset{font-size:13px;color:var(--ink-dim);padding:6px 4px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line);transition:color .2s}
+.reset:hover:not(:disabled){color:var(--ink)}
+.reset:disabled{opacity:.4;cursor:default;text-decoration:none}
 .search{flex:1 1 260px;position:relative}
 .search input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-btn);padding:11px 14px 11px 38px;font-size:14px;transition:border-color .2s}
 .search input:focus{outline:none;border-color:var(--ink-dim)}
@@ -327,10 +331,14 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input id="q" type="search" placeholder="Search a school, network or ZIP" autocomplete="off">
         </label>
+      </div>
+      <div class="controls">
         <div class="pills" id="boroPills" role="group" aria-label="Borough"></div>
       </div>
       <div class="controls">
         <div class="pills" id="authPills" role="group" aria-label="Authorizer"></div>
+      </div>
+      <div class="controls last">
         <div class="pills" role="group" aria-label="Tools">
           <button class="pill" id="mineBtn" aria-pressed="false">♥ My list <span id="mineCount"></span></button>
           <button class="pill" id="nearBtn" aria-pressed="false">
@@ -339,6 +347,7 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
           </button>
           <button class="pill" id="surpriseBtn">✦ Surprise me</button>
         </div>
+        <button class="reset" id="resetBtn" disabled>Reset filters</button>
       </div>
 
       <div class="grid">
@@ -473,7 +482,7 @@ const INFO = {
 
 const LENSES = {
   parent: {
-    emoji: "🧒", name: "Parent", tag: "Track record first",
+    emoji: "🏡", name: "Parent", tag: "Track record first",
     blurb: "Can my kid get in? Is it good? Is it close?",
     eyebrow: "Parent lens", head: "The longest track records, first.",
     sub: "Sorted oldest first, because years in operation tell you something. Turn on Near me to sort by distance.",
@@ -698,11 +707,7 @@ function miles(a, b) {
 const distText = s => state.me ? `${s.loc === "approx" ? "~" : ""}${s._d < 0.1 ? "<0.1" : s._d.toFixed(1)} mi` : null;
 
 $("#nearBtn").addEventListener("click", () => {
-  if (state.me) {
-    state.me = null; $("#nearBtn").setAttribute("aria-pressed", false);
-    if (meMarker) { meMarker.remove(); meMarker = null; }
-    render(); return;
-  }
+  if (state.me) { stopNear(); render(); return; }
   if (!navigator.geolocation) return toast("Your browser can't share location.");
   toast("Finding you…");
   navigator.geolocation.getCurrentPosition(p => {
@@ -717,6 +722,22 @@ $("#nearBtn").addEventListener("click", () => {
     map.flyTo([me.lat, me.lon], 14, { duration: .8 });
     render();
   }, () => toast("Couldn't get your location. Try search instead."), { enableHighAccuracy: false, timeout: 10000 });
+});
+
+function stopNear() {
+  state.me = null; $("#nearBtn").setAttribute("aria-pressed", false);
+  if (meMarker) { meMarker.remove(); meMarker = null; }
+}
+
+function clearFilters() {
+  state.boro = state.auth = null; state.mine = false; state.q = ""; state.limit = 60; $("#q").value = "";
+  document.querySelectorAll("#boroPills .pill,#authPills .pill").forEach(p => p.setAttribute("aria-pressed", !p.dataset.v));
+  $("#mineBtn").setAttribute("aria-pressed", false);
+}
+
+$("#resetBtn").addEventListener("click", () => {
+  clearFilters(); stopNear(); render(true);
+  toast("Filters cleared. All schools are back.");
 });
 
 $("#mineBtn").addEventListener("click", () => {
@@ -780,6 +801,7 @@ function render(fit) {
   $("#insights").innerHTML = stats.map(s => `<div class="stat"><div class="stat-v">${s.v}</div><div class="stat-l">${s.l}${s.info ? infoTip(s.info) : ""}</div></div>`).join("");
 
   $("#listCount").innerHTML = `<b>${list.length}</b> of ${SCHOOLS.length} schools`;
+  $("#resetBtn").disabled = !(state.q.trim() || state.boro || state.auth || state.mine || state.me);
   $("#listSort").textContent = state.me ? "Nearest first" : L ? L.sortLabel : "A–Z";
 
   const el = $("#list");
@@ -928,9 +950,7 @@ function focusSchool(id) {
   if (!s) return;
   if (!cluster.hasLayer(m)) {
     // A hidden school (e.g. from a shared link or Surprise me) — clear filters so it shows.
-    state.boro = state.auth = null; state.mine = false; state.q = ""; $("#q").value = "";
-    document.querySelectorAll("#boroPills .pill,#authPills .pill").forEach(p => p.setAttribute("aria-pressed", false));
-    $("#mineBtn").setAttribute("aria-pressed", false);
+    clearFilters();
     render();
   }
   cluster.zoomToShowLayer(m, () => map.panTo([s.lat, s.lon], { animate: true }));
