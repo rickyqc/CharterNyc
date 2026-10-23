@@ -253,7 +253,7 @@ input{font:inherit;color:inherit}
 
 /* Data notes */
 .detail-list{border-top:1px solid var(--line)}
-.detail-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;padding:18px 0;border-bottom:1px solid var(--line);font-size:15px}
+.detail-row{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:24px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.5}
 .detail-row span:first-child{color:var(--ink-dim)}
 .detail-row a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
 @media (max-width:700px){.detail-row{grid-template-columns:1fr;gap:4px}}
@@ -425,7 +425,7 @@ input{font:inherit;color:inherit}
   <section class="section" id="how" aria-labelledby="howTitle">
     <div class="wrap">
       <p class="eyebrow reveal">How it works</p>
-      <h2 class="h2 reveal" id="howTitle" style="margin-bottom:56px">Three steps. No spreadsheets.</h2>
+      <h2 class="h2 reveal" id="howTitle" style="margin-bottom:56px">Three steps. No sign-up.</h2>
       <div class="steps">
         <div class="reveal"><div class="step-n">01</div><div class="step-t">Pick your lens</div><p class="step-b">Parent, teacher, student or funder. Each lens sorts the schools and picks the facts up front.</p></div>
         <div class="reveal"><div class="step-n">02</div><div class="step-t"><a href="#explore" class="step-link">Wander the map →</a></div><p class="step-b">Filter by borough, authorizer or network. Find what's near you. Tap any dot for the short version.</p></div>
@@ -437,7 +437,7 @@ input{font:inherit;color:inherit}
   <section class="section" id="data" aria-labelledby="dataTitle">
     <div class="wrap">
       <p class="eyebrow reveal">About the data</p>
-      <h2 class="h2 reveal" id="dataTitle" style="margin-bottom:56px">What's real, what's estimated, what's missing.</h2>
+      <h2 class="h2 reveal" id="dataTitle" style="margin-bottom:32px">Real sources. Honest gaps.</h2>
       <div class="detail-list reveal" id="dataNotes"></div>
     </div>
   </section>
@@ -558,7 +558,7 @@ const LENSES = {
     facts: ["network", "ratio", "enroll", "auth"],
   },
   student: {
-    emoji: "🎒", name: "Student", tag: "A to Z",
+    emoji: "🧑‍🎓", name: "Student", tag: "A to Z",
     blurb: "What's it like? What would I get out of it?",
     eyebrow: "Student lens", head: "Every school, A to Z. Go explore.",
     sub: "Look for schools that teach your grade, then check out the vibe. Small, mid-size or big? There's no wrong answer.",
