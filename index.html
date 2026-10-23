@@ -72,7 +72,7 @@ input{font:inherit;color:inherit}
 /* Hero */
 .hero{text-align:center;padding:90px 0 0}
 .hero h1{font-family:var(--font-display);letter-spacing:-.035em;max-width:900px;margin:0 auto 22px;font-size:76px;font-weight:500;line-height:1}
-.hero .sub{color:var(--accent);max-width:640px;margin:0 auto 56px;font-size:13.5px;font-weight:500}
+.hero .sub{color:var(--ink-dim);max-width:640px;margin:0 auto 56px;font-size:19px}
 .lenses{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left}
 .lens-card{height:100%;border:2px solid transparent;border-radius:calc(var(--r-card) + 2px);transition:border-color .15s,transform .35s var(--ease);display:block;width:100%;text-align:left}
 .lens-card:hover{transform:translateY(-4px)}
@@ -89,7 +89,7 @@ input{font:inherit;color:inherit}
 .hero-ctas{display:flex;justify-content:center;gap:14px;margin:48px 0 0;flex-wrap:wrap}
 .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left;max-width:var(--wrap);margin:0 auto;padding:72px var(--gutter) 80px}
 @media (max-width:900px){
-  .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{margin-bottom:36px}
+  .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{font-size:17px;margin-bottom:36px}
   .lenses{grid-template-columns:1fr 1fr;gap:12px}.lens-art{font-size:44px}.lens-info{padding:14px 14px 16px}
   .lens-art .tag{top:10px;left:10px}.strip{gap:10px 28px}
 }
@@ -118,6 +118,7 @@ input{font:inherit;color:inherit}
 .pill{border:1px solid var(--line);background:var(--bg);color:var(--ink-dim);border-radius:var(--r-pill);padding:6px 13px;font-size:13px;display:inline-flex;align-items:center;gap:7px;transition:color .2s,background .2s,border-color .2s}
 .pill:hover{color:var(--ink)}
 .pill[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.pill-hint{opacity:.6;font-size:12px}
 .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px var(--bg)}
 .grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px}
 .mapcard{position:relative;isolation:isolate;border-radius:var(--r-card);overflow:hidden;background:var(--panel);min-height:640px}
@@ -348,6 +349,10 @@ input{font:inherit;color:inherit}
       <div class="controls">
         <div class="pills" id="authPills" role="group" aria-label="Authorizer"></div>
       </div>
+      <div class="controls">
+        <div class="pills" id="gradePills" role="group" aria-label="Grades"></div>
+        <div class="pills" id="sizePills" role="group" aria-label="School size"></div>
+      </div>
       <div class="controls last">
         <div class="pills" role="group" aria-label="Tools">
           <button class="pill" id="mineBtn" aria-pressed="false">♥ My list <span id="mineCount"></span></button>
@@ -489,6 +494,10 @@ const fmt = n => n == null ? "—" : Math.round(n).toLocaleString("en-US");
 const ratio = s => s.enroll && s.teachers ? s.enroll / s.teachers : null;
 const gradeSpan = s => s.grades && s.grades[0] ? (s.grades[0] === s.grades[1] ? s.grades[0] : `${s.grades[0]}–${s.grades[1]}`) : null;
 const gradeNum = g => g === "PK" ? -1 : g === "K" ? 0 : +g;
+// Filters: a school matches a band if any grade it serves falls inside it.
+const GRADE_BANDS = { elem: [-1, 5], middle: [6, 8], high: [9, 12] };
+const SIZES = { small: [0, 300], mid: [300, 700], large: [700, Infinity] };
+const servesBand = (s, [lo, hi]) => !!(s.grades && s.grades[0]) && gradeNum(s.grades[0]) <= hi && gradeNum(s.grades[1]) >= lo;
 const servesHS = s => s.grades && s.grades[1] && gradeNum(s.grades[1]) >= 9;
 const sizeWord = n => n == null ? null : n < 300 ? "Small" : n < 700 ? "Mid-size" : "Big";
 const pct = (n, d) => d ? Math.round(100 * n / d) + "%" : "—";
@@ -603,7 +612,7 @@ const store = {
 };
 
 const state = {
-  lens: null, q: "", boro: null, auth: null, mine: false, heat: false,
+  lens: null, q: "", boro: null, auth: null, grade: null, size: null, mine: false, heat: false,
   me: null, saved: new Set(store.get("cc-saved", [])), limit: 60, open: null,
 };
 let SCHOOLS = [], META = {}, BY_ID = new Map();
@@ -641,7 +650,7 @@ function toast(msg) {
 
 /* ---------- lens picker ---------- */
 function renderLenses() {
-  $("#lenses").innerHTML = Object.entries(LENSES).map(([k, L]) => `
+  $("#lenses").innerHTML = ["student", "teacher", "parent", "enterprise"].map(k => [k, LENSES[k]]).map(([k, L]) => `
     <button class="lens-card reveal" data-lens="${k}" aria-pressed="${state.lens === k}">
       <div class="lens-face">
         <div class="lens-art" aria-hidden="true"><span class="tag tag-ghost">${L.tag}</span>${L.emoji}</div>
@@ -707,6 +716,8 @@ function filtered() {
   return SCHOOLS.filter(s =>
     (!state.boro || s.boro === state.boro) &&
     (!state.auth || s.auth === state.auth) &&
+    (!state.grade || servesBand(s, GRADE_BANDS[state.grade])) &&
+    (!state.size || (s.enroll != null && s.enroll >= SIZES[state.size][0] && s.enroll < SIZES[state.size][1])) &&
     (!state.mine || state.saved.has(s.id)) &&
     (!q || s.name.toLowerCase().includes(q) || s.network.toLowerCase().includes(q) || (s.address || "").toLowerCase().includes(q) || `district ${s.csd}` === q)
   );
@@ -752,7 +763,8 @@ function stopNear() {
 
 function clearFilters() {
   state.boro = state.auth = null; state.mine = false; state.q = ""; state.limit = 60; $("#q").value = "";
-  document.querySelectorAll("#boroPills .pill,#authPills .pill").forEach(p => p.setAttribute("aria-pressed", !p.dataset.v));
+  state.grade = state.size = null;
+  document.querySelectorAll("#boroPills .pill,#authPills .pill,#gradePills .pill,#sizePills .pill").forEach(p => p.setAttribute("aria-pressed", !p.dataset.v));
   $("#mineBtn").setAttribute("aria-pressed", false);
 }
 
@@ -822,7 +834,7 @@ function render(fit) {
   $("#insights").innerHTML = stats.map(s => `<div class="mini"><b>${s.v}</b> ${s.l}${s.info ? infoTip(s.info) : ""}</div>`).join("");
 
   $("#listCount").innerHTML = `<b>${list.length}</b> of ${SCHOOLS.length} schools`;
-  $("#resetBtn").disabled = !(state.q.trim() || state.boro || state.auth || state.mine || state.me);
+  $("#resetBtn").disabled = !(state.q.trim() || state.boro || state.auth || state.grade || state.size || state.mine || state.me);
   $("#listSort").textContent = state.me ? "Nearest first" : L ? L.sortLabel : "A–Z";
 
   const el = $("#list");
@@ -1171,6 +1183,8 @@ function renderStatic() {
   $("#builtNote").textContent = `Data built ${META.built}. Not affiliated with NYSED or NYC DOE.`;
   pills($("#boroPills"), [[null, "All boroughs"], ...BOROS.map(b => [b, b])], "boro");
   pills($("#authPills"), [[null, "All authorizers"], ...Object.entries(AUTH).map(([k, a]) => [k, a.label, `--a-${k}`])], "auth");
+  pills($("#gradePills"), [[null, "All grades"], ["elem", "Elementary"], ["middle", "Middle"], ["high", "High school"]], "grade");
+  pills($("#sizePills"), [[null, "All sizes"], ["small", "Small <span class=\"pill-hint\">under 300</span>"], ["mid", "Mid-size <span class=\"pill-hint\">300–700</span>"], ["large", "Large <span class=\"pill-hint\">700+</span>"]], "size");
   updateMine();
 }
 
