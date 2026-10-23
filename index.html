@@ -210,8 +210,8 @@ input{font:inherit;color:inherit}
 .section-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:56px}
 .chart{position:relative}
 .chart svg{width:100%;height:auto;display:block;overflow:visible}
-.chart .bar{fill:var(--accent);transition:opacity .2s}
-.chart .bar.pipe{fill:color-mix(in srgb,var(--accent) 45%,var(--bg-alt))}
+.chart .bar{fill:color-mix(in srgb,var(--ink-dim) 32%,var(--bg-alt));transition:opacity .2s}
+.chart .bar.pipe{fill:var(--accent)}
 .chart .hit{fill:transparent}
 .chart .grid line{stroke:var(--line);stroke-width:1}
 .chart text{fill:var(--ink-dim);font-size:11px;font-family:var(--font-body)}
@@ -224,13 +224,6 @@ input{font:inherit;color:inherit}
 .boro-l{color:var(--ink-dim);font-size:14px}
 .boro-bar{height:4px;border-radius:4px;background:var(--panel);margin-top:12px;overflow:hidden}
 .boro-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transform-origin:left;transition:transform 1s var(--ease)}
-details.table{margin-top:40px;font-size:13.5px}
-details.table summary{cursor:pointer;color:var(--ink-dim);list-style:none;display:inline-flex;gap:6px}
-details.table summary::-webkit-details-marker{display:none}
-details.table table{border-collapse:collapse;width:100%;max-width:520px;margin-top:16px}
-details.table th,details.table td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
-details.table th{color:var(--ink-dim);font-weight:500}
-details.table td:last-child,details.table th:last-child{text-align:right;font-variant-numeric:tabular-nums}
 @media (max-width:900px){.boros{grid-template-columns:repeat(3,1fr);gap:16px}.boro-n{font-size:26px}}
 @media (max-width:560px){.boros{grid-template-columns:1fr 1fr}}
 
@@ -238,6 +231,8 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
 .step-n{color:var(--ink-dim);margin-bottom:16px;font-size:14px}
 .step-t{margin-bottom:8px;font-size:16.5px;font-weight:650}
+.step-link{text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--line);transition:color .2s,text-decoration-color .2s}
+.step-link:hover{color:var(--accent);text-decoration-color:currentColor}
 .step-b{color:var(--ink-dim);font-size:14px;max-width:320px}
 @media (max-width:900px){.steps{grid-template-columns:1fr;gap:28px}}
 
@@ -303,9 +298,9 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
 <main id="top">
   <section class="hero">
     <div class="wrap">
-      <p class="eyebrow reveal">Every NYC charter school · 2025–26</p>
+      <p class="eyebrow reveal">Every NYC charter school</p>
       <h1 class="reveal">Who's exploring today?</h1>
-      <p class="sub reveal">Pick a lens. We'll sort NYC's charter schools around what matters to you.</p>
+      <p class="sub reveal">Pick a lens.<br>We'll sort NYC's charter schools around what matters to you.</p>
       <div class="lenses" id="lenses" role="group" aria-label="Choose a lens"></div>
       <div class="hero-ctas reveal">
         <a href="#explore" class="btn btn-primary">Explore the map</a>
@@ -383,11 +378,10 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
           <p class="eyebrow">The landscape</p>
           <h2 class="h2" id="landTitle">Twenty-seven years of openings.</h2>
         </div>
-        <p class="lede">When today's schools first opened their doors. The lighter bars are the newest wave, still building up grades.</p>
+        <p class="lede">When today's schools first opened their doors. The orange bars are the newest wave, still building up grades.</p>
       </div>
       <div class="chart reveal" id="chart"><div class="chart-tip" id="chartTip"></div></div>
       <p class="chart-note">Counts only schools in the current directory. Schools that closed or merged aren't listed, so the early years look smaller than they really were.</p>
-      <details class="table"><summary>View as table ›</summary><table id="chartTable"><thead><tr><th>Year opened</th><th>Schools</th></tr></thead><tbody></tbody></table></details>
       <div class="boros reveal" id="boros"></div>
     </div>
   </section>
@@ -398,7 +392,7 @@ details.table td:last-child,details.table th:last-child{text-align:right;font-va
       <h2 class="h2 reveal" id="howTitle" style="margin-bottom:56px">Three steps. No spreadsheets.</h2>
       <div class="steps">
         <div class="reveal"><div class="step-n">01</div><div class="step-t">Pick your lens</div><p class="step-b">Parent, teacher, student or funder. Each lens sorts the schools and picks the facts up front.</p></div>
-        <div class="reveal"><div class="step-n">02</div><div class="step-t">Wander the map</div><p class="step-b">Filter by borough, authorizer or network. Find what's near you. Tap any dot for the short version.</p></div>
+        <div class="reveal"><div class="step-n">02</div><div class="step-t"><a href="#explore" class="step-link">Wander the map →</a></div><p class="step-b">Filter by borough, authorizer or network. Find what's near you. Tap any dot for the short version.</p></div>
         <div class="reveal"><div class="step-n">03</div><div class="step-t">Heart, share, follow up</div><p class="step-b">Save a shortlist and send the link to whoever you're deciding with. Every profile says what to check next.</p></div>
       </div>
     </div>
@@ -1074,7 +1068,6 @@ function drawChart() {
     });
     h.addEventListener("mouseleave", () => { tip.style.opacity = 0; el.querySelectorAll(".bar").forEach(b => b.style.opacity = 1); });
   });
-  $("#chartTable tbody").innerHTML = years.map(yr => `<tr><td>${yr === 2026 ? "2026 (opening)" : yr}</td><td>${counts[yr] || 0}</td></tr>`).join("");
   $("#landTitle").textContent = `${2026 - years[0]} years of openings.`;
 }
 
