@@ -99,7 +99,6 @@ input{font:inherit;color:inherit}
 .explore-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:40px}
 .swap{transition:opacity .35s var(--ease),transform .35s var(--ease)}
 .swap.out{opacity:0;transform:translateY(8px)}
-.insights{display:flex;flex-wrap:wrap;gap:10px 40px;margin-bottom:32px}
 .mini{color:var(--ink-dim);font-size:15px;display:inline-flex;align-items:center;gap:6px}
 .mini b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 .stat{border-top:1px solid var(--line);padding-top:18px}
@@ -107,6 +106,23 @@ input{font:inherit;color:inherit}
 .stat-l{color:var(--ink-dim);font-size:14px;display:flex;align-items:center;gap:6px}
 .controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-bottom:12px}
 .controls.last{margin-bottom:22px}
+.fg-label,.pill.filters-btn{display:none}
+/* Phones: borough/authorizer/grade/size tuck behind a Filters button; My list, Near me and Surprise me stay out. */
+@media (max-width:700px){
+  .search-row{margin-bottom:10px}
+  .filters-wrap{display:flex;flex-direction:column}
+  .filters-wrap .controls.last{order:1;margin-bottom:12px}
+  .filter-groups{order:2;display:none;background:var(--bg);border-radius:var(--r-card);padding:16px 16px 4px;margin-bottom:22px}
+  .filter-groups.open{display:block;animation:drop .3s var(--ease)}
+  .filter-groups .controls{display:block;margin-bottom:14px}
+  .fg-label{display:block;font-size:12.5px;color:var(--ink-dim);margin-bottom:8px}
+  .filter-groups .pills{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+  .filter-groups .pills::-webkit-scrollbar{display:none}
+  .filter-groups .pill{flex-shrink:0}
+  .pill.filters-btn{display:inline-flex}
+  .filters-btn[aria-expanded=true]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .reset{font-size:13px;color:var(--ink-dim);padding:6px 4px;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line);transition:color .2s}
 .reset:hover:not(:disabled){color:var(--ink)}
 .reset:disabled{opacity:.4;cursor:default;text-decoration:none}
@@ -159,7 +175,6 @@ input{font:inherit;color:inherit}
   .strip{grid-template-columns:1fr 1fr;gap:16px;padding:48px var(--gutter) 56px}.stat-v{font-size:30px}.stat-l{font-size:13px}
   .checklist-wrap{grid-template-columns:1fr;gap:20px}
 }
-@media (max-width:560px){.insights{gap:8px 24px}}
 
 /* Leaflet restyle */
 .leaflet-container{font-family:var(--font-body);background:var(--panel)}
@@ -252,6 +267,7 @@ input{font:inherit;color:inherit}
 @media (max-width:900px){.steps{grid-template-columns:1fr;gap:28px}}
 
 /* Data notes */
+#data .wrap{max-width:860px}
 .detail-list{border-top:1px solid var(--line)}
 .detail-row{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr);gap:24px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;line-height:1.5}
 .detail-row span:first-child{color:var(--ink-dim)}
@@ -334,27 +350,26 @@ input{font:inherit;color:inherit}
         <p class="lede" id="lensSub">Tap a dot to open its profile. Pick a lens up top and the list re-sorts itself.</p>
       </div>
 
-      <div class="insights swap" id="insights"></div>
-
-      <div class="controls">
+      <div class="filters-wrap">
+      <div class="controls search-row">
         <label class="search">
           <span class="sr">Search schools or networks</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input id="q" type="search" placeholder="Search a school, network or ZIP" autocomplete="off">
         </label>
       </div>
-      <div class="controls">
-        <div class="pills" id="boroPills" role="group" aria-label="Borough"></div>
-      </div>
-      <div class="controls">
-        <div class="pills" id="authPills" role="group" aria-label="Authorizer"></div>
-      </div>
-      <div class="controls">
-        <div class="pills" id="gradePills" role="group" aria-label="Grades"></div>
-        <div class="pills" id="sizePills" role="group" aria-label="School size"></div>
+      <div class="filter-groups" id="filterGroups">
+        <div class="controls"><span class="fg-label">Borough</span><div class="pills" id="boroPills" role="group" aria-label="Borough"></div></div>
+        <div class="controls"><span class="fg-label">Authorizer</span><div class="pills" id="authPills" role="group" aria-label="Authorizer"></div></div>
+        <div class="controls"><span class="fg-label">Grades</span><div class="pills" id="gradePills" role="group" aria-label="Grades"></div></div>
+        <div class="controls"><span class="fg-label">Size</span><div class="pills" id="sizePills" role="group" aria-label="School size"></div></div>
       </div>
       <div class="controls last">
         <div class="pills" role="group" aria-label="Tools">
+          <button class="pill filters-btn" id="filtersBtn" aria-expanded="false" aria-controls="filterGroups">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+            Filters <span id="filtersCount"></span>
+          </button>
           <button class="pill" id="mineBtn" aria-pressed="false">♥ My list <span id="mineCount"></span></button>
           <button class="pill" id="nearBtn" aria-pressed="false">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="6"/></svg>
@@ -363,6 +378,7 @@ input{font:inherit;color:inherit}
           <button class="pill" id="surpriseBtn">✦ Surprise me</button>
         </div>
         <button class="reset" id="resetBtn" disabled>Reset filters</button>
+      </div>
       </div>
 
       <div class="grid">
@@ -484,12 +500,6 @@ const BOROS = ["Manhattan", "Bronx", "Brooklyn", "Queens", "Staten Island"];
 const NYSED_URL = "https://www.nysed.gov/charter-schools/charter-schools-directory";
 
 const byName = (a, b) => a.name.localeCompare(b.name);
-const median = arr => {
-  const v = arr.filter(x => x != null).sort((a, b) => a - b);
-  if (!v.length) return null;
-  const m = v.length >> 1;
-  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
-};
 const fmt = n => n == null ? "—" : Math.round(n).toLocaleString("en-US");
 const ratio = s => s.enroll && s.teachers ? s.enroll / s.teachers : null;
 const gradeSpan = s => s.grades && s.grades[0] ? (s.grades[0] === s.grades[1] ? s.grades[0] : `${s.grades[0]}–${s.grades[1]}`) : null;
@@ -500,7 +510,6 @@ const SIZES = { small: [0, 300], mid: [300, 700], large: [700, Infinity] };
 const servesBand = (s, [lo, hi]) => !!(s.grades && s.grades[0]) && gradeNum(s.grades[0]) <= hi && gradeNum(s.grades[1]) >= lo;
 const servesHS = s => s.grades && s.grades[1] && gradeNum(s.grades[1]) >= 9;
 const sizeWord = n => n == null ? null : n < 300 ? "Small" : n < 700 ? "Mid-size" : "Big";
-const pct = (n, d) => d ? Math.round(100 * n / d) + "%" : "—";
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const INFO = {
@@ -515,15 +524,9 @@ const LENSES = {
     emoji: "🏡", name: "Parent", tag: "Track record first",
     blurb: "Can my kid get in? Is it good? Is it close?",
     eyebrow: "Parent lens", head: "The longest track records, first.",
-    sub: "Sorted oldest first, because years in operation tell you something. Turn on Near me to sort by distance.",
     sort: (a, b) => a.year - b.year || byName(a, b),
     sortLabel: "Oldest first",
     meta: s => [gradeSpan(s) && `Grades ${gradeSpan(s)}`, s.year < 2026 ? `since ${s.year}` : "opening 2026"].filter(Boolean).join(" · "),
-    stats: L => [
-      { v: fmt(median(L.map(s => s.enroll))), l: "Typical school size", info: INFO.enroll },
-      { v: pct(L.filter(s => s.grades && gradeNum(s.grades[0]) <= 0).length, L.length), l: "Start at Pre-K or K" },
-      { v: pct(L.filter(s => s.year <= 2015).length, L.length), l: "Open 10+ years" },
-    ],
     checkTitle: "Before you apply.",
     checks: [
       "Most NYC charters share one application. The deadline is usually April 1, but confirm with each school.",
@@ -538,15 +541,9 @@ const LENSES = {
     emoji: "🍎", name: "Teacher", tag: "Biggest networks first",
     blurb: "Is this somewhere I'd want to work?",
     eyebrow: "Teacher lens", head: "Big networks up top, independents below.",
-    sub: "Networks mean career ladders and shared curriculum. Independents often mean more say. Both are worth a look.",
     sort: (a, b) => b.netSize - a.netSize || a.network.localeCompare(b.network) || byName(a, b),
     sortLabel: "Network size",
     meta: s => [s.network === "Independent" ? "Independent" : `${s.network} · ${s.netSize} schools`, ratio(s) && `${ratio(s).toFixed(0)} students per teacher`].filter(Boolean).join(" · "),
-    stats: L => [
-      { v: fmt(new Set(L.filter(s => s.network !== "Independent").map(s => s.network)).size), l: "Networks shown", info: INFO.network },
-      { v: pct(L.filter(s => s.network !== "Independent").length, L.length), l: "Schools in a network" },
-      { v: (median(L.map(ratio)) ?? 0).toFixed(1), l: "Students per teacher (typical)", info: INFO.ratio },
-    ],
     checkTitle: "Before you interview.",
     checks: [
       "Check the network's careers page. Big networks hire all year and often have resident-teacher programs.",
@@ -561,15 +558,9 @@ const LENSES = {
     emoji: "🧑‍🎓", name: "Student", tag: "A to Z",
     blurb: "What's it like? What would I get out of it?",
     eyebrow: "Student lens", head: "Every school, A to Z. Go explore.",
-    sub: "Look for schools that teach your grade, then check out the vibe. Small, mid-size or big? There's no wrong answer.",
     sort: byName,
     sortLabel: "A–Z",
     meta: s => [gradeSpan(s) && `Grades ${gradeSpan(s)}`, s.enroll && `${sizeWord(s.enroll)} · ${fmt(s.enroll)} students`].filter(Boolean).join(" · "),
-    stats: L => [
-      { v: fmt(L.filter(servesHS).length), l: "Teach high school grades" },
-      { v: fmt(L.filter(s => s.enroll && s.enroll < 300).length), l: "Small schools (under 300)", info: INFO.enroll },
-      { v: fmt(new Set(L.map(s => s.boro)).size), l: "Boroughs covered" },
-    ],
     checkTitle: "Questions worth asking.",
     checks: [
       "Ask a current student what a normal Tuesday is like. Then ask what they'd change.",
@@ -584,15 +575,9 @@ const LENSES = {
     emoji: "📈", name: "Enterprise", tag: "Newest first",
     blurb: "Funders, real estate, edtech, research: growth, gaps, opportunities.",
     eyebrow: "Enterprise lens", head: "The newest schools and the 2026 pipeline, first.",
-    sub: "New schools mean facilities searches, vendor decisions and grades still being added. Shade districts to spot gaps.",
     sort: (a, b) => b.year - a.year || byName(a, b),
     sortLabel: "Newest first",
     meta: s => [s.year >= 2026 ? "Opening 2026" : `Opened ${s.year}`, AUTH[s.auth].label, s.enroll && `${fmt(s.enroll)} students`].filter(Boolean).join(" · "),
-    stats: L => [
-      { v: fmt(L.filter(s => s.year >= 2025).length), l: "Opened 2025 or opening 2026" },
-      { v: fmt(L.reduce((t, s) => t + (s.enroll || 0), 0)), l: "Students enrolled", info: INFO.enroll },
-      { v: pct(L.filter(s => s.netSize >= 5).length, L.length), l: "In networks of 5+", info: INFO.network },
-    ],
     checkTitle: "Due diligence, in order.",
     checks: [
       "Pull renewal history and the latest renewal report from the authorizer: SUNY CSI, the Board of Regents, or NYC DOE.",
@@ -692,7 +677,7 @@ function renderHead() {
   const L = LENSES[state.lens];
   $("#lensEyebrow").textContent = L ? L.eyebrow : "The map";
   $("#exploreTitle").textContent = L ? L.head : "Every charter school in the city.";
-  $("#lensSub").textContent = L ? L.sub : "Tap a dot to open its profile. Pick a lens up top and the list re-sorts itself.";
+  $("#lensSub").hidden = !!L;
   $("#checkWrap").hidden = !L;
   if (L) {
     $("#checkTitle").textContent = L.checkTitle;
@@ -768,6 +753,11 @@ function clearFilters() {
   $("#mineBtn").setAttribute("aria-pressed", false);
 }
 
+$("#filtersBtn").addEventListener("click", () => {
+  const open = $("#filterGroups").classList.toggle("open");
+  $("#filtersBtn").setAttribute("aria-expanded", open);
+});
+
 $("#resetBtn").addEventListener("click", () => {
   clearFilters(); stopNear(); render(true);
   toast("Filters cleared. All schools are back.");
@@ -818,7 +808,7 @@ document.addEventListener("mouseover", e => { const i = e.target.closest?.(".inf
 document.addEventListener("focusin", e => { const i = e.target.closest?.(".info,.hbar"); i ? showTip(i) : hideTip(); });
 addEventListener("scroll", hideTip, { passive: true });
 
-/* ---------- list + insights ---------- */
+/* ---------- list ---------- */
 const heartSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1.1 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.5 3.4 4.1 6.7C19.5 16.4 12 21 12 21z"/></svg>';
 const infoTip = t => `<i class="info" tabindex="0" role="note" aria-label="How to read this: ${esc(t)}" data-tip="${esc(t)}">i</i>`;
 
@@ -826,14 +816,10 @@ function render(fit) {
   const list = sorted(filtered());
   const L = LENSES[state.lens];
 
-  const stats = L ? L.stats(list) : [
-    { v: fmt(list.length), l: "Schools shown" },
-    { v: fmt(list.reduce((t, s) => t + (s.enroll || 0), 0)), l: "Students enrolled", info: INFO.enroll },
-    { v: pct(list.filter(s => s.loc === "exact").length, list.length), l: "Pinned to an exact address", info: INFO.loc },
-  ];
-  $("#insights").innerHTML = stats.map(s => `<div class="mini"><b>${s.v}</b> ${s.l}${s.info ? infoTip(s.info) : ""}</div>`).join("");
 
   $("#listCount").innerHTML = `<b>${list.length}</b> of ${SCHOOLS.length} schools`;
+  const active = [state.boro, state.auth, state.grade, state.size].filter(Boolean).length;
+  $("#filtersCount").textContent = active ? `· ${active}` : "";
   $("#resetBtn").disabled = !(state.q.trim() || state.boro || state.auth || state.grade || state.size || state.mine || state.me);
   $("#listSort").textContent = state.me ? "Nearest first" : L ? L.sortLabel : "A–Z";
 
