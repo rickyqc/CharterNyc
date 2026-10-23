@@ -2,7 +2,8 @@
 
 Sources (all public, downloaded fresh on every run):
   * NYSED Charter School Directory, 2025-26 (Excel)        -> roster, district, year, authorizer
-  * NCES Common Core of Data via Urban Institute API       -> address, coordinates, grades, enrollment, teachers
+  * NCES Common Core of Data via Urban Institute API       -> address, coordinates, grades, enrollment, teachers,
+                                                             5-year enrollment growth, district charter share
   * NYC Open Data: Borough Boundaries (gthc-hcne)          -> map outlines
   * NYC Open Data: School Districts (8ugf-3d8u)            -> CSD outlines, fallback placement
 
@@ -31,7 +32,11 @@ OUT = ROOT / "data"
 NYSED_XLSX = "https://www.nysed.gov/sites/default/files/programs/charter-schools/nys-charter-school-directory-as-of-09-02-2025.xlsx"
 NYSED_PAGE = "https://www.nysed.gov/charter-schools/charter-schools-directory"
 CCD_API = "https://educationdata.urban.org/api/v1/schools/ccd/directory/{year}/?fips=36&charter=1"
-CCD_YEARS = (2022, 2023, 2024)  # later years win
+CCD_ALL = "https://educationdata.urban.org/api/v1/schools/ccd/directory/{year}/?fips=36"
+CCD_HISTORY = range(2019, 2025)  # 2024 = the 2024-25 school year
+CCD_YEARS = (2022, 2023, 2024)  # where location fields come from; later years win
+SHARE_YEAR = 2024
+MIN_TREND_BASE = 100  # don't measure growth from a tiny founding class
 BOROUGHS = "https://data.cityofnewyork.us/resource/gthc-hcne.geojson?$limit=10"
 DISTRICTS = "https://data.cityofnewyork.us/resource/8ugf-3d8u.geojson?$limit=100"
 
@@ -141,6 +146,48 @@ def point_in(poly, seed):
     return poly.representative_point()
 
 
+def ccd_all(url):
+    """Follow the Urban API's pagination."""
+    out = []
+    while url:
+        page = json.loads(fetch(url))
+        out += page["results"]
+        url = page.get("next")
+    return out
+
+
+def growth(points):
+    """Enrollment change from five years back (or the first year with a real class) to the latest year."""
+    if len(points) < 2:
+        return None
+    last = max(points)
+    base = next((y for y in sorted(points) if y >= last - 5 and points[y] >= MIN_TREND_BASE), None)
+    if base is None or base >= last:
+        return None
+    return {"since": base, "from": points[base], "to": points[last],
+            "pct": round(100 * (points[last] - points[base]) / points[base])}
+
+
+def district_share(rows):
+    """Share of each CSD's public K-12 students who attend a charter, from every NYC public school in CCD."""
+    out = {}
+    for r in rows:
+        code = r["seasch"].split("-")[-1]
+        n = r.get("enrollment")
+        if len(code) != 12 or code[:2] not in ("31", "32", "33", "34", "35") or not n or n <= 0:
+            continue
+        csd = int(code[2:4])
+        if not 1 <= csd <= 32:
+            continue
+        d = out.setdefault(csd, {"enroll": 0, "charter": 0})
+        d["enroll"] += n
+        if code[6:8] == "86":
+            d["charter"] += n
+    for d in out.values():
+        d["share"] = round(100 * d["charter"] / d["enroll"], 1)
+    return {str(k): out[k] for k in sorted(out)}
+
+
 def grade(g):
     return {-1: "PK", 0: "K"}.get(g, str(g)) if g is not None and g >= -1 else None
 
@@ -151,10 +198,15 @@ def main():
     wb = openpyxl.load_workbook(io.BytesIO(fetch(NYSED_XLSX)), read_only=True)
     rows = [r for r in list(wb.active.iter_rows(values_only=True))[2:] if r[6] == "New York City"]
 
-    ccd = {}
-    for y in CCD_YEARS:
-        for r in json.loads(fetch(CCD_API.format(year=y)))["results"]:
-            ccd[r["seasch"].split("-")[-1]] = r
+    ccd, history = {}, {}
+    for y in CCD_HISTORY:
+        for r in ccd_all(CCD_API.format(year=y)):
+            sid = r["seasch"].split("-")[-1]
+            if r.get("enrollment") and r["enrollment"] > 0:
+                history.setdefault(sid, {})[y] = r["enrollment"]
+            if y in CCD_YEARS:
+                ccd[sid] = r
+    districts_share = district_share(ccd_all(CCD_ALL.format(year=SHARE_YEAR)))
 
     districts_raw = json.loads(fetch(DISTRICTS))
     csd_shapes = {int(f["properties"]["schooldist"]): shape(f["geometry"]) for f in districts_raw["features"]}
@@ -190,6 +242,9 @@ def main():
                 "ccdYear": c["year"],
                 "nces": c["ncessch"],
             })
+            g = growth(history.get(sed, {}))
+            if g:
+                s["growth"] = g
         else:
             p = point_in(csd_shapes[csd], sed)
             s.update({"lat": round(p.y, 6), "lon": round(p.x, 6), "loc": "approx"})
@@ -206,9 +261,12 @@ def main():
         "built": date.today().isoformat(),
         "count": len(schools),
         "exact": sum(s["loc"] == "exact" for s in schools),
+        "districts": districts_share,
+        "shareYear": SHARE_YEAR,
         "sources": {
             "roster": {"label": "NYSED Charter School Directory 2025-26 (as of Sep 2, 2025)", "url": NYSED_PAGE},
             "locations": {"label": "NCES Common Core of Data, school years 2022-23 to 2024-25", "url": "https://nces.ed.gov/ccd/"},
+            "history": {"label": "NCES Common Core of Data, school years 2019-20 to 2024-25", "url": "https://educationdata.urban.org/"},
             "boundaries": {"label": "NYC Open Data: Borough Boundaries & School Districts", "url": "https://data.cityofnewyork.us/"},
         },
     }

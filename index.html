@@ -87,9 +87,7 @@ input{font:inherit;color:inherit}
 .tag{color:var(--bg);background:var(--ink);border-radius:var(--r-pill);padding:4px 10px;font-size:12px;white-space:nowrap;line-height:1.4;display:inline-block}
 .tag-ghost{color:var(--ink-dim);background:var(--bg);border:1px solid var(--line)}
 .hero-ctas{display:flex;justify-content:center;gap:14px;margin:48px 0 0;flex-wrap:wrap}
-.strip{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 56px;padding:56px var(--gutter) 64px}
-.strip div{color:var(--ink-dim);font-size:15px}
-.strip b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;text-align:left;max-width:var(--wrap);margin:0 auto;padding:72px var(--gutter) 80px}
 @media (max-width:900px){
   .hero{padding-top:44px}.hero h1{font-size:42px}.hero .sub{font-size:17px;margin-bottom:36px}
   .lenses{grid-template-columns:1fr 1fr;gap:12px}.lens-art{font-size:44px}.lens-info{padding:14px 14px 16px}
@@ -101,7 +99,9 @@ input{font:inherit;color:inherit}
 .explore-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:40px}
 .swap{transition:opacity .35s var(--ease),transform .35s var(--ease)}
 .swap.out{opacity:0;transform:translateY(8px)}
-.insights{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-bottom:40px}
+.insights{display:flex;flex-wrap:wrap;gap:10px 40px;margin-bottom:32px}
+.mini{color:var(--ink-dim);font-size:15px;display:inline-flex;align-items:center;gap:6px}
+.mini b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 .stat{border-top:1px solid var(--line);padding-top:18px}
 .stat-v{font-family:var(--font-display);font-size:40px;font-weight:500;letter-spacing:-.03em;line-height:1.1;font-variant-numeric:tabular-nums}
 .stat-l{color:var(--ink-dim);font-size:14px;display:flex;align-items:center;gap:6px}
@@ -155,10 +155,10 @@ input{font:inherit;color:inherit}
 .checks a{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line)}
 @media (max-width:900px){
   .grid{grid-template-columns:1fr}.mapcard{min-height:440px}.listcard{height:520px}
-  .insights{grid-template-columns:1fr 1fr 1fr;gap:12px}.stat-v{font-size:28px}.stat-l{font-size:12.5px}
+  .strip{grid-template-columns:1fr 1fr;gap:16px;padding:48px var(--gutter) 56px}.stat-v{font-size:30px}.stat-l{font-size:13px}
   .checklist-wrap{grid-template-columns:1fr;gap:20px}
 }
-@media (max-width:560px){.insights{grid-template-columns:1fr}.stat{display:flex;align-items:baseline;gap:12px}.stat-v{min-width:90px}}
+@media (max-width:560px){.insights{gap:8px 24px}}
 
 /* Leaflet restyle */
 .leaflet-container{font-family:var(--font-body);background:var(--panel)}
@@ -179,30 +179,38 @@ input{font:inherit;color:inherit}
 .bubble{position:fixed;top:0;left:0;width:max-content;max-width:min(260px,calc(100vw - 32px));background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:10px 12px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:1400;box-shadow:var(--shadow)}
 .bubble.on{opacity:1}
 
-/* Sheet (school profile) */
-.scrim{position:fixed;inset:0;background:#0006;opacity:0;pointer-events:none;transition:opacity .3s;z-index:1100}
-.sheet{position:fixed;top:12px;right:12px;bottom:12px;width:min(460px,calc(100vw - 24px));background:var(--bg);border-radius:22px;box-shadow:var(--sheet-shadow);z-index:1200;transform:translateX(calc(100% + 24px));transition:transform .45s var(--ease);display:flex;flex-direction:column;overflow:hidden;
-  padding-bottom:env(safe-area-inset-bottom)}
+/* Sheet (school profile): structure from CharterCompassNYC's drawer */
+.scrim{position:fixed;inset:0;background:#0000004d;opacity:0;pointer-events:none;transition:opacity .3s var(--ease);z-index:1100}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;top:12px;right:12px;bottom:12px;width:min(460px,calc(100vw - 24px));background:var(--bg);border-radius:20px;box-shadow:var(--sheet-shadow);z-index:1200;overflow-y:auto;overscroll-behavior:contain;transform:translateX(calc(100% + 24px));transition:transform .45s var(--ease)}
 .sheet.open{transform:none}
-.sheet-top{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 0}
-.sheet-body{overflow-y:auto;padding:16px 28px 28px;flex:1}
-.sheet h3{font-family:var(--font-display);font-size:30px;font-weight:500;letter-spacing:-.025em;line-height:1.12;margin:14px 0 6px}
-.sheet .where{color:var(--ink-dim);font-size:14px}
-.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border-radius:var(--r-inner);overflow:hidden;margin:24px 0}
-.fact{background:var(--panel);padding:14px 16px}
-.fact-l{color:var(--ink-dim);font-size:12.5px;display:flex;align-items:center;gap:6px}
-.fact-v{font-size:17px;font-weight:600;margin-top:2px;line-height:1.3;overflow-wrap:anywhere}
-.fact-v small{font-weight:400;color:var(--ink-dim);font-size:12.5px}
-.locbox{display:flex;gap:12px;align-items:flex-start;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:14px}
-.locbox .tag{flex-shrink:0;margin-top:1px}
-.sheet h4{font-size:13.5px;color:var(--accent);font-weight:500;margin:28px 0 4px}
-.sheet .checks li{font-size:14px;padding:12px 0}
-.links{display:grid;gap:8px;margin-top:24px}
-.links .btn{justify-content:space-between}
-@media (max-width:700px){
-  .scrim.on{opacity:1;pointer-events:auto}
-  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;max-height:88vh;border-radius:22px 22px 0 0;transform:translateY(100%)}
-  .sheet-body{padding:12px 20px 24px}
+.sheet-close{position:sticky;top:14px;margin:14px 14px -50px auto;display:grid;z-index:2;background:var(--panel)}
+.sheet-body{padding:28px 28px calc(32px + env(safe-area-inset-bottom))}
+.sheet-hero{background:var(--panel);border-radius:var(--r-inner);padding:24px 22px;margin:-8px -8px 24px}
+.sheet-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;padding-right:40px}
+.tag-accent{background:var(--accent);color:#fff}
+.sheet-title{font-family:var(--font-display);font-weight:500;letter-spacing:-.025em;font-size:28px;line-height:1.1}
+.sheet-sub{color:var(--ink-dim);font-size:14px;margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.sheet-sub .approx-note{color:var(--accent)}
+.facts{border-top:1px solid var(--line)}
+.fact{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.fact>span:first-child{color:var(--ink-dim);display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.fact>span:last-child{text-align:right;font-weight:500;max-width:62%}
+.fact .na{color:var(--ink-dim);font-weight:400}
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:28px}
+.lens-box{margin-top:28px}
+.lens-box h4{font-size:13.5px;color:var(--accent);font-weight:500;margin-bottom:10px}
+.lens-box ol{list-style:none;display:grid;gap:10px;counter-reset:c}
+.lens-box li{font-size:14px;color:var(--ink-dim);display:grid;grid-template-columns:26px 1fr;counter-increment:c}
+.lens-box li::before{content:counter(c,decimal-leading-zero);font-size:12px;padding-top:2px}
+.lens-box a{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.sheet-links{display:flex;flex-direction:column;margin-top:18px}
+.sheet-links a{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;transition:color .2s}
+.sheet-links a:hover{color:var(--accent)}
+.sheet-links a span:last-child{color:var(--ink-dim);white-space:nowrap}
+@media (max-width:600px){
+  .sheet{top:auto;left:0;right:0;bottom:0;width:100%;max-height:90vh;border-radius:20px 20px 0 0;transform:translateY(100%)}
+  .sheet-body{padding:24px 18px calc(28px + env(safe-area-inset-bottom))}
 }
 
 /* Landscape chart */
@@ -217,8 +225,11 @@ input{font:inherit;color:inherit}
 .chart text{fill:var(--ink-dim);font-size:11px;font-family:var(--font-body)}
 .chart text.lbl{fill:var(--ink);font-weight:600}
 .chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:8px 11px;border-radius:10px;transform:translate(-50%,calc(-100% - 10px));opacity:0;transition:opacity .15s;white-space:nowrap}
-.chart-card{background:var(--bg-alt);border-radius:var(--r-card);padding:28px;margin-top:64px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px}
+.chart + .split{margin-top:64px}
+.chart-card{background:var(--bg-alt);border-radius:var(--r-card);padding:28px;min-width:0}
 .chart-title{font-size:14px;font-weight:600;margin-bottom:24px}
+.chart-title .dim{color:var(--ink-dim);font-weight:400}
 .hbars{display:flex;flex-direction:column;gap:12px}
 .hbar{display:grid;grid-template-columns:minmax(110px,38%) 1fr auto;gap:12px;align-items:center;font-size:13.5px;width:100%;text-align:left}
 .hbar-track{height:10px;position:relative}
@@ -227,7 +238,7 @@ input{font:inherit;color:inherit}
 .hbar .val{font-variant-numeric:tabular-nums;color:var(--ink-dim)}
 .hbar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .reveal:not(.in) .hbar-track i{transform:scaleX(0)}
-@media (max-width:820px){.chart-card{padding:20px}}
+@media (max-width:820px){.split{grid-template-columns:1fr}.chart-card{padding:20px}}
 
 /* How it works */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
@@ -383,10 +394,26 @@ input{font:inherit;color:inherit}
         <p class="lede">Every charter open today, by the year it opened. Schools that closed aren't in the directory, so older years look smaller than they really were.</p>
       </div>
       <div class="chart reveal" id="chart"><div class="chart-tip" id="chartTip"></div></div>
-      <figure class="chart-card reveal">
-        <figcaption class="chart-title">By borough</figcaption>
-        <div class="hbars" id="boros"></div>
-      </figure>
+      <div class="split">
+        <figure class="chart-card reveal">
+          <figcaption class="chart-title">By borough</figcaption>
+          <div class="hbars" id="boroChart"></div>
+        </figure>
+        <figure class="chart-card reveal">
+          <figcaption class="chart-title">Largest networks <span class="dim">· campuses in NYC</span></figcaption>
+          <div class="hbars" id="networkChart"></div>
+        </figure>
+      </div>
+      <div class="split">
+        <figure class="chart-card reveal">
+          <figcaption class="chart-title">Where charters enroll the most <span class="dim">· share of public students, <span id="shareYear"></span></span></figcaption>
+          <div class="hbars" id="shareChart"></div>
+        </figure>
+        <figure class="chart-card reveal">
+          <figcaption class="chart-title">Fastest-growing schools <span class="dim">· enrollment change, last 5 years</span></figcaption>
+          <div class="hbars" id="growthChart"></div>
+        </figure>
+      </div>
     </div>
   </section>
 
@@ -431,13 +458,7 @@ input{font:inherit;color:inherit}
 
 <div class="scrim" id="scrim"></div>
 <aside class="sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheetTitle" aria-hidden="true">
-  <div class="sheet-top">
-    <span id="sheetStatus"></span>
-    <div style="display:flex;gap:4px">
-      <button class="heart" id="sheetHeart" aria-pressed="false" aria-label="Save to my list"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.5-9.3C1.1 8.4 3.2 5 6.6 5c2 0 3.4 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.5 3.4 4.1 6.7C19.5 16.4 12 21 12 21z"/></svg></button>
-      <button class="icon-btn" id="sheetClose" aria-label="Close profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-    </div>
-  </div>
+  <button class="icon-btn sheet-close" id="sheetClose" aria-label="Close profile"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
   <div class="sheet-body" id="sheetBody"></div>
 </aside>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -766,7 +787,7 @@ function toggleSave(id) {
   toast(had ? "Removed from your list." : `Saved. ${state.saved.size} on your list.`);
   updateMine();
   if (state.mine) render(); else document.querySelectorAll(`.heart[data-id="${id}"]`).forEach(h => h.setAttribute("aria-pressed", !had));
-  if (state.open === id) $("#sheetHeart").setAttribute("aria-pressed", !had);
+  if (state.open === id) openSheet(id, false, true);
 }
 function updateMine() { $("#mineCount").textContent = state.saved.size ? `(${state.saved.size})` : ""; }
 
@@ -781,8 +802,8 @@ function showTip(el) {
   bubble.style.transform = `translate(${x}px,${y}px)`;
 }
 const hideTip = () => bubble.classList.remove("on");
-document.addEventListener("mouseover", e => { const i = e.target.closest?.(".info"); i ? showTip(i) : hideTip(); });
-document.addEventListener("focusin", e => { const i = e.target.closest?.(".info"); i ? showTip(i) : hideTip(); });
+document.addEventListener("mouseover", e => { const i = e.target.closest?.(".info,.hbar"); i ? showTip(i) : hideTip(); });
+document.addEventListener("focusin", e => { const i = e.target.closest?.(".info,.hbar"); i ? showTip(i) : hideTip(); });
 addEventListener("scroll", hideTip, { passive: true });
 
 /* ---------- list + insights ---------- */
@@ -798,7 +819,7 @@ function render(fit) {
     { v: fmt(list.reduce((t, s) => t + (s.enroll || 0), 0)), l: "Students enrolled", info: INFO.enroll },
     { v: pct(list.filter(s => s.loc === "exact").length, list.length), l: "Pinned to an exact address", info: INFO.loc },
   ];
-  $("#insights").innerHTML = stats.map(s => `<div class="stat"><div class="stat-v">${s.v}</div><div class="stat-l">${s.l}${s.info ? infoTip(s.info) : ""}</div></div>`).join("");
+  $("#insights").innerHTML = stats.map(s => `<div class="mini"><b>${s.v}</b> ${s.l}${s.info ? infoTip(s.info) : ""}</div>`).join("");
 
   $("#listCount").innerHTML = `<b>${list.length}</b> of ${SCHOOLS.length} schools`;
   $("#resetBtn").disabled = !(state.q.trim() || state.boro || state.auth || state.mine || state.me);
@@ -967,21 +988,7 @@ function onTheme() {
 }
 
 /* ---------- profile sheet ---------- */
-function factHTML(key, s) {
-  const r = ratio(s);
-  const F = {
-    grades: ["Grades", gradeSpan(s) || "Not yet reported"],
-    enroll: ["Students", s.enroll ? `${fmt(s.enroll)} <small>(${s.ccdYear}–${String(s.ccdYear + 1).slice(2)})</small>` : "Not yet reported", INFO.enroll],
-    since: [s.year >= 2026 ? "Opens" : "Opened", s.year >= 2026 ? "Fall 2026" : `${s.year} <small>(${2026 - s.year} yr${2026 - s.year === 1 ? "" : "s"})</small>`],
-    auth: ["Authorizer", AUTH[s.auth].label],
-    network: ["Network", s.network === "Independent" ? "Independent" : `${esc(s.network)} <small>(${s.netSize} in NYC)</small>`, INFO.network],
-    ratio: ["Students per teacher", r ? r.toFixed(1) : "Not reported", INFO.ratio],
-    size: ["Feel", sizeWord(s.enroll) || "Brand new"],
-  }[key];
-  return `<div class="fact"><div class="fact-l">${F[0]}${F[2] ? infoTip(F[2]) : ""}</div><div class="fact-v">${F[1]}</div></div>`;
-}
-
-function openSheet(id, animate) {
+function openSheet(id, animate, keepScroll) {
   const s = BY_ID.get(id);
   if (!s) return;
   const prev = state.open;
@@ -989,33 +996,53 @@ function openSheet(id, animate) {
   if (prev && prev !== id) hot(prev, false);
   hot(id, true);
   const L = LENSES[state.lens];
-  const keys = L ? L.facts : ["grades", "enroll", "since", "auth"];
-  const allKeys = [...keys, ...["network", "ratio", "grades", "enroll", "since", "auth"].filter(k => !keys.includes(k))].slice(0, 6);
-  const status = s.year >= 2026 ? '<span class="tag">Opening 2026</span>' : s.year === 2025 ? '<span class="tag">New this year</span>' : `<span class="tag tag-ghost">Open since ${s.year}</span>`;
-  const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.loc === "exact" ? `${s.name}, ${s.address}` : `${s.name}, ${s.boro}, NY`)}`;
-  const d = distText(s);
-  $("#sheetStatus").innerHTML = status;
-  $("#sheetHeart").setAttribute("aria-pressed", state.saved.has(id));
+  const saved = state.saved.has(id);
+  const r = ratio(s);
+  const na = '<span class="na">Not reported yet</span>';
+  const status = s.year >= 2026 ? '<span class="tag tag-accent">Opening 2026</span>'
+    : s.year >= 2025 ? '<span class="tag tag-accent">New in 2025</span>'
+      : `<span class="tag">Since ${s.year}</span>`;
+  const where = s.loc === "exact" ? esc(s.address)
+    : `<span class="approx-note">Approximate location</span> · District ${s.csd} ${infoTip(INFO.loc)}`;
+  const facts = [
+    ["Borough", s.boro],
+    ["District", `District ${s.csd}`],
+    ["Grades", gradeSpan(s) || na],
+    [`Enrollment ${infoTip(INFO.enroll)}`, s.enroll ? `${fmt(s.enroll)} students <span class="na">(${s.ccdYear}–${String(s.ccdYear + 1).slice(2)})</span>` : na],
+    [`Students per teacher ${infoTip(INFO.ratio)}`, r ? r.toFixed(1) : na],
+    ["Opened", s.year >= 2026 ? "Fall 2026" : String(s.year)],
+    ["Authorizer", AUTH[s.auth].long],
+    [`Network ${infoTip(INFO.network)}`, s.network === "Independent" ? "Independent" : `${esc(s.network)} · ${s.netSize} in NYC`],
+  ];
+  if (state.me) facts.unshift(["Distance", `${distText(s)} as the crow flies`]);
+  const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(s.loc === "exact" ? `${s.name}, ${s.address}` : `${s.name}, ${s.boro}, NY`)}`;
+  const links = [
+    [`https://data.nysed.gov/profile.php?instid=${s.inst}`, "Test scores & enrollment", "NYSED data ↗"],
+    s.nces && [`https://nces.ed.gov/ccd/schoolsearch/school_detail.asp?ID=${s.nces}`, "Federal school profile", "NCES ↗"],
+    [NYSED_URL, "Charter directory listing", "NYSED ↗"],
+  ].filter(Boolean);
   $("#sheetBody").innerHTML = `
-    <h3 id="sheetTitle">${esc(s.name)}</h3>
-    <p class="where">${s.boro} · Community School District ${s.csd}${d ? ` · ${d} away` : ""}</p>
-    <div class="facts">${allKeys.map(k => factHTML(k, s)).join("")}</div>
-    <div class="locbox">
-      ${s.loc === "exact" ? '<span class="tag tag-ghost">Exact</span>' : '<span class="tag">Approximate</span>'}
-      <div>${s.loc === "exact" ? `${esc(s.address)}<div style="color:var(--ink-dim);font-size:12.5px;margin-top:2px">Address on file with NCES. Schools sometimes move or add campuses.</div>`
-        : `<strong>Pin placed somewhere in District ${s.csd}.</strong><div style="color:var(--ink-dim);font-size:12.5px;margin-top:2px">This school is too new for federal data, so we don't know its street address. Check Google Maps.</div>`}</div>
+    <div class="sheet-hero">
+      <div class="sheet-tags">${status}<span class="tag tag-ghost">${AUTH[s.auth].label}</span>${s.network !== "Independent" ? `<span class="tag tag-ghost">${esc(s.network)}</span>` : ""}</div>
+      <h3 class="sheet-title" id="sheetTitle">${esc(s.name)}</h3>
+      <p class="sheet-sub">${where}</p>
     </div>
-    ${L ? `<h4>${L.emoji} What to check next</h4><ol class="checks">${L.checks.slice(0, 3).map(c => `<li><span>${c}</span></li>`).join("")}</ol>` : `<h4>Tip</h4><p style="font-size:14px;color:var(--ink-dim)">Pick a lens up top and this profile will show the facts and next steps that matter to you.</p>`}
-    <div class="links">
-      <a class="btn btn-primary" href="${gmaps}" target="_blank" rel="noopener">${s.loc === "exact" ? "Directions in Google Maps" : "Find the exact location in Google Maps"} <span aria-hidden="true">↗</span></a>
-      <a class="btn btn-ghost" href="https://data.nysed.gov/profile.php?instid=${s.inst}" target="_blank" rel="noopener">Test scores &amp; enrollment on NYSED <span aria-hidden="true">↗</span></a>
-      ${s.nces ? `<a class="btn btn-ghost" href="https://nces.ed.gov/ccd/schoolsearch/school_detail.asp?ID=${s.nces}" target="_blank" rel="noopener">Federal school record (NCES) <span aria-hidden="true">↗</span></a>` : ""}
-      <a class="btn btn-ghost" href="${NYSED_URL}" target="_blank" rel="noopener">NYSED charter directory <span aria-hidden="true">↗</span></a>
-    </div>`;
+    <div class="facts">${facts.map(([k, v]) => `<div class="fact"><span>${k}</span><span>${v}</span></div>`).join("")}</div>
+    <div class="sheet-actions">
+      <button class="btn ${saved ? "btn-ghost" : "btn-primary"}" id="sheetSave">${saved ? "♥ Saved" : "♡ Save"}</button>
+      <a class="btn btn-ghost" href="${gmaps}" target="_blank" rel="noopener">Directions ↗</a>
+    </div>
+    <div class="lens-box">
+      <h4>${L ? `${L.emoji} For ${L.name.toLowerCase()}s: check next` : "Check next"}</h4>
+      ${L ? `<ol>${L.checks.slice(0, 3).map(c => `<li><span>${c}</span></li>`).join("")}</ol>`
+        : `<p style="font-size:14px;color:var(--ink-dim)">Pick a lens up top and this profile will show the next steps that matter to you.</p>`}
+    </div>
+    <div class="sheet-links">${links.map(([href, label, hint]) => `<a href="${href}" target="_blank" rel="noopener"><span>${label}</span><span>${hint}</span></a>`).join("")}</div>`;
+  $("#sheetSave").addEventListener("click", () => toggleSave(id));
   const sh = $("#sheet");
   sh.classList.add("open"); sh.setAttribute("aria-hidden", "false");
   $("#scrim").classList.add("on");
-  $("#sheetBody").scrollTop = 0;
+  if (!keepScroll) sh.scrollTop = 0;
   if (animate) setTimeout(() => $("#sheetClose").focus({ preventScroll: true }), 50);
   history.replaceState(null, "", `#school=${id}`);
 }
@@ -1030,7 +1057,6 @@ function closeSheet() {
 }
 $("#sheetClose").addEventListener("click", closeSheet);
 $("#scrim").addEventListener("click", closeSheet);
-$("#sheetHeart").addEventListener("click", () => state.open && toggleSave(state.open));
 addEventListener("keydown", e => { if (e.key === "Escape" && state.open) closeSheet(); });
 
 /* ---------- landscape chart ---------- */
@@ -1074,31 +1100,63 @@ function drawChart() {
   });
 }
 
-function drawBoros() {
-  const c = {}; SCHOOLS.forEach(s => c[s.boro] = (c[s.boro] || 0) + 1);
-  const max = Math.max(...Object.values(c));
-  $("#boros").innerHTML = BOROS.slice().sort((a, b) => (c[b] || 0) - (c[a] || 0)).map(b => `
-    <button class="hbar" data-b="${b}" aria-label="${b}: ${c[b] || 0} schools. Show on the map">
-      <span class="hbar-label">${b}</span>
-      <span class="hbar-track"><i style="--w:${((c[b] || 0) / max) * 100}%"></i></span>
-      <span class="val">${c[b] || 0}</span>
+// Horizontal bar charts, same structure as CharterCompassNYC. Rows: [label, n, tip, onClick, display].
+function hbars(el, rows) {
+  const top = Math.max(...rows.map(r => r[1]));
+  el.innerHTML = rows.map(([label, n, tip, , shown], i) => `
+    <button class="hbar" data-i="${i}" data-tip="${esc(tip)}" aria-label="${esc(tip)}">
+      <span class="hbar-label">${esc(label)}</span>
+      <span class="hbar-track"><i style="--w:${Math.max(1, (n / top) * 100)}%"></i></span>
+      <span class="val">${shown ?? n}</span>
     </button>`).join("");
-  $("#boros").querySelectorAll(".hbar").forEach(b => b.addEventListener("click", () => {
-    state.boro = b.dataset.b;
-    document.querySelectorAll("#boroPills .pill").forEach(p => p.setAttribute("aria-pressed", p.dataset.v === state.boro));
-    render(true);
-    $("#explore").scrollIntoView({ behavior: "smooth" });
-  }));
+  el.querySelectorAll(".hbar").forEach(b => b.addEventListener("click", () => rows[b.dataset.i][3]()));
 }
+
+function goExplore() { $("#explore").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); }
+function filterTo(apply) {
+  clearFilters(); apply();
+  document.querySelectorAll("#boroPills .pill").forEach(p => p.setAttribute("aria-pressed", (p.dataset.v || null) === state.boro));
+  render(true); goExplore();
+}
+const shortName = n => n.replace(/ Charter (High |Middle )?School/, "").replace(/\s+-\s+/, " – ");
+
+function drawBreakdowns() {
+  const c = {}; SCHOOLS.forEach(s => c[s.boro] = (c[s.boro] || 0) + 1);
+  const fresh = b => SCHOOLS.filter(s => s.boro === b && s.year >= 2024).length;
+  hbars($("#boroChart"), BOROS.slice().sort((a, b) => c[b] - c[a]).map(b =>
+    [b, c[b], `${b}: ${c[b]} schools, ${fresh(b)} opened since 2024`, () => filterTo(() => { state.boro = b; })]));
+
+  const nets = {};
+  SCHOOLS.forEach(s => { if (s.network !== "Independent") nets[s.network] = (nets[s.network] || 0) + 1; });
+  const indie = SCHOOLS.filter(s => s.network === "Independent").length;
+  hbars($("#networkChart"), [
+    ...Object.entries(nets).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n, k]) =>
+      [n, k, `${n}: ${k} campuses in NYC`, () => filterTo(() => { state.q = n; $("#q").value = n; })]),
+    ["Independent (single school)", indie, `Independent: ${indie} schools that aren't part of a named network`, () => filterTo(() => { state.q = "independent"; $("#q").value = "independent"; })],
+  ]);
+
+  const yr = `${META.shareYear}–${String(META.shareYear + 1).slice(2)}`;
+  $("#shareYear").textContent = yr;
+  hbars($("#shareChart"), Object.entries(META.districts).sort((a, b) => b[1].share - a[1].share).slice(0, 8).map(([csd, d]) =>
+    [`District ${csd} · ${BY_CSD_BORO(+csd)}`, d.share, `District ${csd}: ${d.share}% of ${fmt(d.enroll)} public school students attend a charter (${yr})`,
+      () => filterTo(() => { state.q = `district ${csd}`; $("#q").value = `district ${csd}`; }), `${d.share}%`]));
+
+  const growing = SCHOOLS.filter(s => s.growth && s.growth.since <= s.ccdYear - 4 && (s.enroll || 0) >= 150)
+    .sort((a, b) => b.growth.pct - a.growth.pct).slice(0, 8);
+  hbars($("#growthChart"), growing.map(s =>
+    [shortName(s.name), s.growth.pct, `${s.name}: ${fmt(s.growth.from)} → ${fmt(s.growth.to)} students since ${s.growth.since}–${String(s.growth.since + 1).slice(2)}`,
+      () => { goExplore(); setTimeout(() => focusSchool(s.id), 400); }, `+${fmt(s.growth.pct)}%`]));
+}
+const BY_CSD_BORO = csd => SCHOOLS.find(s => s.csd === csd)?.boro ?? "";
 
 /* ---------- boot ---------- */
 function renderStatic() {
   const n = SCHOOLS.length;
   const nets = new Set(SCHOOLS.filter(s => s.network !== "Independent").map(s => s.network)).size;
   $("#strip").innerHTML = [
-    [n, "schools"], [fmt(SCHOOLS.reduce((t, s) => t + (s.enroll || 0), 0)), "students"],
-    [nets, "networks"], [SCHOOLS.filter(s => s.year >= 2025).length, "new for 2025–26"],
-  ].map(([v, l]) => `<div><b>${v}</b> ${l}</div>`).join("");
+    [n, "Schools"], [fmt(SCHOOLS.reduce((t, s) => t + (s.enroll || 0), 0)), "Students"],
+    [nets, "Networks"], [SCHOOLS.filter(s => s.year >= 2025).length, "New for 2025–26"],
+  ].map(([v, l]) => `<div class="stat"><div class="stat-v">${v}</div><div class="stat-l">${l}</div></div>`).join("");
   $("#dataNotes").innerHTML = [
     ["The school list", `All ${n} NYC schools in the <a href="${META.sources.roster.url}" target="_blank" rel="noopener">${META.sources.roster.label}</a>: name, district, year opened, authorizer.`],
     ["Locations", `${META.exact} schools are pinned to the address they reported to the <a href="${META.sources.locations.url}" target="_blank" rel="noopener">${META.sources.locations.label}</a>. The other ${n - META.exact} opened in 2025 or open in 2026 and aren't in federal data yet, so each sits at an approximate spot inside its district, drawn with a dashed ring.`],
@@ -1144,7 +1202,7 @@ async function boot() {
     if (lens && LENSES[lens]) setLens(lens, false); else { renderHead(); render(h.fit); }
     if (h.fit) render(true);
     if (h.school) setTimeout(() => focusSchool(h.school), 400);
-    drawChart(); drawBoros();
+    drawChart(); drawBreakdowns();
   } catch (err) {
     console.error(err);
     const msg = location.protocol === "file:"

@@ -19,7 +19,7 @@ There's no build step for the page. `index.html` is vanilla JS, with Leaflet and
 
 | File | Source |
 |---|---|
-| `schools.json` | NYSED Charter School Directory 2025–26 (roster, district, year, authorizer), joined on the state BEDS code to NCES Common Core of Data 2022–23 to 2024–25 (address, coordinates, grades, enrollment, teachers) |
+| `schools.json` | NYSED Charter School Directory 2025–26 (roster, district, year, authorizer), joined on the state BEDS code to NCES Common Core of Data 2022–23 to 2024–25 (address, coordinates, grades, enrollment, teachers). Also from CCD: 5-year enrollment growth per school (2019–20 to 2024–25) and each district's charter share of public students (2024–25, from every NYC public school) |
 | `boroughs.geojson` | NYC Open Data, Borough Boundaries (`gthc-hcne`), simplified |
 | `districts.geojson` | NYC Open Data, School Districts (`8ugf-3d8u`), simplified |
 
