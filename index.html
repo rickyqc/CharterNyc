@@ -217,15 +217,17 @@ input{font:inherit;color:inherit}
 .chart text{fill:var(--ink-dim);font-size:11px;font-family:var(--font-body)}
 .chart text.lbl{fill:var(--ink);font-weight:600}
 .chart-tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:8px 11px;border-radius:10px;transform:translate(-50%,calc(-100% - 10px));opacity:0;transition:opacity .15s;white-space:nowrap}
-.chart-note{color:var(--ink-dim);font-size:13px;margin-top:18px;max-width:640px}
-.boros{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;margin-top:64px}
-.boro{border-top:1px solid var(--line);padding-top:16px}
-.boro-n{font-family:var(--font-display);font-size:32px;font-weight:500;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.boro-l{color:var(--ink-dim);font-size:14px}
-.boro-bar{height:4px;border-radius:4px;background:var(--panel);margin-top:12px;overflow:hidden}
-.boro-bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transform-origin:left;transition:transform 1s var(--ease)}
-@media (max-width:900px){.boros{grid-template-columns:repeat(3,1fr);gap:16px}.boro-n{font-size:26px}}
-@media (max-width:560px){.boros{grid-template-columns:1fr 1fr}}
+.chart-card{background:var(--bg-alt);border-radius:var(--r-card);padding:28px;margin-top:64px}
+.chart-title{font-size:14px;font-weight:600;margin-bottom:24px}
+.hbars{display:flex;flex-direction:column;gap:12px}
+.hbar{display:grid;grid-template-columns:minmax(110px,38%) 1fr auto;gap:12px;align-items:center;font-size:13.5px;width:100%;text-align:left}
+.hbar-track{height:10px;position:relative}
+.hbar-track i{position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:0 4px 4px 0;background:var(--ink-dim);opacity:.55;transform-origin:left;transition:transform .8s var(--ease),opacity .2s}
+.hbar:hover .hbar-track i,.hbar:focus-visible .hbar-track i{opacity:1}
+.hbar .val{font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+.hbar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reveal:not(.in) .hbar-track i{transform:scaleX(0)}
+@media (max-width:820px){.chart-card{padding:20px}}
 
 /* How it works */
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
@@ -376,13 +378,15 @@ input{font:inherit;color:inherit}
       <div class="section-head reveal">
         <div>
           <p class="eyebrow">The landscape</p>
-          <h2 class="h2" id="landTitle">Twenty-seven years of openings.</h2>
+          <h2 class="h2" id="landTitle">Twenty-seven years of new schools.</h2>
         </div>
-        <p class="lede">When today's schools first opened their doors. The orange bars are the newest wave, still building up grades.</p>
+        <p class="lede">Every charter open today, by the year it opened. Schools that closed aren't in the directory, so older years look smaller than they really were.</p>
       </div>
       <div class="chart reveal" id="chart"><div class="chart-tip" id="chartTip"></div></div>
-      <p class="chart-note">Counts only schools in the current directory. Schools that closed or merged aren't listed, so the early years look smaller than they really were.</p>
-      <div class="boros reveal" id="boros"></div>
+      <figure class="chart-card reveal">
+        <figcaption class="chart-title">By borough</figcaption>
+        <div class="hbars" id="boros"></div>
+      </figure>
     </div>
   </section>
 
@@ -1068,14 +1072,18 @@ function drawChart() {
     });
     h.addEventListener("mouseleave", () => { tip.style.opacity = 0; el.querySelectorAll(".bar").forEach(b => b.style.opacity = 1); });
   });
-  $("#landTitle").textContent = `${2026 - years[0]} years of openings.`;
 }
 
 function drawBoros() {
   const c = {}; SCHOOLS.forEach(s => c[s.boro] = (c[s.boro] || 0) + 1);
   const max = Math.max(...Object.values(c));
-  $("#boros").innerHTML = BOROS.map(b => `<button class="boro" data-b="${b}" style="text-align:left"><div class="boro-n">${c[b] || 0}</div><div class="boro-l">${b}</div><div class="boro-bar"><i style="transform:scaleX(${(c[b] || 0) / max})"></i></div></button>`).join("");
-  $("#boros").querySelectorAll(".boro").forEach(b => b.addEventListener("click", () => {
+  $("#boros").innerHTML = BOROS.slice().sort((a, b) => (c[b] || 0) - (c[a] || 0)).map(b => `
+    <button class="hbar" data-b="${b}" aria-label="${b}: ${c[b] || 0} schools. Show on the map">
+      <span class="hbar-label">${b}</span>
+      <span class="hbar-track"><i style="--w:${((c[b] || 0) / max) * 100}%"></i></span>
+      <span class="val">${c[b] || 0}</span>
+    </button>`).join("");
+  $("#boros").querySelectorAll(".hbar").forEach(b => b.addEventListener("click", () => {
     state.boro = b.dataset.b;
     document.querySelectorAll("#boroPills .pill").forEach(p => p.setAttribute("aria-pressed", p.dataset.v === state.boro));
     render(true);
